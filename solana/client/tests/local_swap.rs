@@ -56,6 +56,7 @@ fn maker_posts_and_taker_fills_private_order() -> Result<()> {
     let maker = ShieldedKeypair::from_keypair(&payer)?;
     let taker_key = Keypair::new();
     let mut rpc = SolanaRpc::new(rpc_url.clone());
+    rpc.airdrop(&payer.pubkey(), 1_000_000_000)?;
     rpc.airdrop(&taker_key.pubkey(), 20_000_000)?;
     let taker = ShieldedKeypair::from_keypair(&taker_key)?;
     let client = SprClient::new(
@@ -234,7 +235,14 @@ fn maker_posts_and_taker_fills_private_order() -> Result<()> {
     let program_nullifier = ProgramOwner::nullifier_key();
     let authority = BothOwners(&program_nullifier, &taker);
     let spp = client.prove_transact(taken.spp_inputs, None, &authority)?;
-    eprintln!("take selector={:?} inputs={} outputs={} trees={} expiry={}", spp.circuit, spp.inputs.len(), spp.outputs.len(), spp.tree_contexts.len(), spp.expiry_unix_ts);
+    eprintln!(
+        "take selector={:?} inputs={} outputs={} trees={} expiry={}",
+        spp.circuit,
+        spp.inputs.len(),
+        spp.outputs.len(),
+        spp.tree_contexts.len(),
+        spp.expiry_unix_ts
+    );
     ensure!(
         spp.private_tx_hash == taken.private_tx_hash,
         "take proof hash mismatch"

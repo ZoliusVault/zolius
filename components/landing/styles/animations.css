@@ -377,9 +377,6 @@ html.lp-on body {
 }
 .landing-footer__brand img {
   display: block;
-  width: 126px;
-  height: auto;
-  filter: invert(1);
 }
 .landing-footer__brand p {
   max-width: 210px;
@@ -499,9 +496,6 @@ html.lp-on body {
   }
 }
 @media (max-width: 767px) {
-  .landing-footer__brand img {
-    width: 108px;
-  }
   .landing-footer__column a {
     font-size: 12px;
   }
