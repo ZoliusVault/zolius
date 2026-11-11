@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from "react";
+import { KeyRound, Hash, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { CountUp } from "./CountUp";
 
 interface CycleData {
@@ -47,6 +48,13 @@ const CYCLES: CycleData[] = [
   },
 ];
 
+const SHIELD_STAGES = [
+  { tag: "ENTROPY", icon: KeyRound, title: "Key Gen", sub: "CSPRNG Entropy" },
+  { tag: "POSEIDON", icon: Hash, title: "Poseidon", sub: "Leaf Hash" },
+  { tag: "RING-SIG", icon: ShieldCheck, title: "Ring Sig", sub: "0-Held Balance" },
+  { tag: "SETTLED", icon: CheckCircle2, title: "Settled", sub: "Privacy Ring" },
+];
+
 export const ShieldConsoleStep1: React.FC = () => {
   const [cycleIndex, setCycleIndex] = useState(0);
   const [stage, setStage] = useState(1); // 1 = key gen, 2 = commitment, 3 = ring signature, 4 = settled
@@ -89,47 +97,43 @@ export const ShieldConsoleStep1: React.FC = () => {
         minHeight: "480px",
       }}
     >
-      {/* Terminal Window Header Bar */}
+      {/* Terminal Window Header Bar — Locked height & nowrap */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          flexWrap: "wrap",
+          flexWrap: "nowrap",
           gap: "var(--space-3)",
           borderBottom: "1px solid var(--color-hairline)",
           paddingBottom: "var(--space-4)",
+          minHeight: "44px",
+          boxSizing: "border-box",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
-          <div style={{ display: "flex", gap: "var(--space-2)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0, overflow: "hidden" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "3px 8px",
+              borderRadius: "4px",
+              backgroundColor: "rgba(255, 140, 0, 0.08)",
+              border: "1px solid rgba(255, 140, 0, 0.22)",
+              flexShrink: 0,
+            }}
+          >
             <span
               style={{
-                width: 10,
-                height: 10,
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-border-strong)",
-                display: "inline-block",
+                fontFamily: "monospace",
+                fontSize: "10px",
+                fontWeight: 700,
+                color: "#FF8C00",
+                letterSpacing: "0.06em",
               }}
-            />
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-border-strong)",
-                display: "inline-block",
-              }}
-            />
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-border-strong)",
-                display: "inline-block",
-              }}
-            />
+            >
+              SOLANA PIPELINE
+            </span>
           </div>
 
           <span
@@ -138,13 +142,16 @@ export const ShieldConsoleStep1: React.FC = () => {
               fontSize: "var(--text-body)",
               fontWeight: 500,
               color: "var(--color-text)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             Zolius Confidential Pipeline // Solana Privacy Rings
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", flexShrink: 0, whiteSpace: "nowrap" }}>
           <div
             style={{
               display: "inline-flex",
@@ -186,21 +193,17 @@ export const ShieldConsoleStep1: React.FC = () => {
         </div>
       </div>
 
-      {/* 4-Stage Stepper Progress Strip */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "var(--space-3)" }}>
-        {[
-          { num: "01", title: "Key Gen", sub: "CSPRNG Entropy" },
-          { num: "02", title: "Poseidon", sub: "Leaf Hash" },
-          { num: "03", title: "Ring Sig", sub: "0-Held Balance" },
-          { num: "04", title: "Settled", sub: "Privacy Ring" },
-        ].map((st, i) => {
+      {/* 4-Stage Stepper Progress Strip — Semantic badges & icons, no numbers or dots */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "var(--space-3)" }}>
+        {SHIELD_STAGES.map((st, i) => {
           const isPassed = stage > i + 1;
           const isCurrent = stage === i + 1;
           const isDone = isPassed || isCurrent;
+          const Icon = st.icon;
 
           return (
             <div
-              key={st.num}
+              key={st.tag}
               style={{
                 background: "var(--color-surface)",
                 padding: "var(--space-3) var(--space-4)",
@@ -212,28 +215,30 @@ export const ShieldConsoleStep1: React.FC = () => {
                 flexDirection: "column",
                 gap: "var(--space-1)",
                 transition: "all 0.25s ease",
+                minHeight: "82px",
+                boxSizing: "border-box",
+                justifyContent: "space-between",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: "18px" }}>
                 <span
                   style={{
                     fontFamily: "monospace",
-                    fontSize: "var(--text-caption)",
-                    color: isDone ? "var(--color-accent)" : "var(--color-faint)",
+                    fontSize: "10px",
+                    color: isCurrent ? "var(--color-accent)" : isPassed ? "#059669" : "var(--color-faint)",
                     fontWeight: 700,
+                    letterSpacing: "0.06em",
                     lineHeight: 1,
                   }}
                 >
-                  {st.num}
+                  [{st.tag}]
                 </span>
-                <span
+                <Icon
+                  size={13}
                   style={{
-                    width: "7px",
-                    height: "7px",
-                    borderRadius: "50%",
-                    backgroundColor: isCurrent || isPassed ? "var(--color-accent)" : "rgba(26, 26, 26, 0.15)",
-                    transition: "background-color 0.2s ease",
-                    display: "inline-block",
+                    color: isCurrent ? "var(--color-accent)" : isPassed ? "#059669" : "rgba(26, 26, 26, 0.2)",
+                    transition: "color 0.2s ease",
+                    flexShrink: 0,
                   }}
                 />
               </div>
@@ -243,6 +248,9 @@ export const ShieldConsoleStep1: React.FC = () => {
                   fontSize: "var(--text-body-sm)",
                   fontWeight: 600,
                   color: isDone ? "var(--color-text)" : "var(--color-muted)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 {st.title}
@@ -252,6 +260,9 @@ export const ShieldConsoleStep1: React.FC = () => {
                   fontFamily: "monospace",
                   fontSize: "var(--text-caption)",
                   color: "var(--color-muted)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 {st.sub}
@@ -317,7 +328,7 @@ export const ShieldConsoleStep1: React.FC = () => {
         </div>
       </div>
 
-      {/* Real-time Stage Status Banner */}
+      {/* Real-time Stage Status Banner — Locked height */}
       <div
         style={{
           padding: "var(--space-3) var(--space-4)",
@@ -328,8 +339,11 @@ export const ShieldConsoleStep1: React.FC = () => {
           gridTemplateColumns: "1fr auto",
           alignItems: "center",
           gap: "var(--space-3)",
-          minHeight: "56px",
+          height: "58px",
+          minHeight: "58px",
+          maxHeight: "58px",
           boxSizing: "border-box",
+          overflow: "hidden",
         }}
       >
         <span

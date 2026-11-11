@@ -21,6 +21,7 @@ import { loadWallet, type StoredWallet } from "@/lib/wallets";
 import { WalletModal } from "@/components/WalletModal";
 import { ZkShieldRadar } from "@/components/ZkShieldRadar";
 import { SolanaLogo, SolLogo, UsdcLogo, SplLogo, CertoraLogo, OtterSecLogo, ZkSecurityLogo } from "@/components/TokenLogos";
+import { SolanaProgramStatus } from "@/components/trade/SolanaProgramStatus";
 
 export type AppWorkstationTab = "shield" | "swap" | "lock" | "withdraw" | "vault";
 
@@ -785,6 +786,7 @@ function WorkstationContent() {
           {/* Tab 2: Confidential ZK Swap */}
           {activeTab === "swap" && (
             <form onSubmit={handleSwapSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+              <SolanaProgramStatus program="swap" />
               <div>
                 <h2 style={{ margin: "0 0 4px 0", fontSize: "17px", fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-headline)" }}>
                   Confidential ZK Swap (CPI)
@@ -1027,6 +1029,7 @@ function WorkstationContent() {
           {/* Tab 3: Timelock Escrow */}
           {activeTab === "lock" && (
             <form onSubmit={handleLockSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+              <SolanaProgramStatus program="lock" />
               <div>
                 <h2 style={{ margin: "0 0 4px 0", fontSize: "17px", fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-headline)" }}>
                   Confidential Timelock Escrow

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { ShieldCheck, KeyRound, Cpu, CheckCircle2, Check, ArrowUpRight } from "lucide-react";
 import { CountUp } from "./CountUp";
 
 interface WithdrawalCycleData {
@@ -57,6 +58,13 @@ const WITHDRAWAL_CYCLES: WithdrawalCycleData[] = [
   },
 ];
 
+const WITHDRAWAL_STAGES = [
+  { tag: "VERIFY", icon: ShieldCheck, title: "Membership", sub: "WASM Tree Proof" },
+  { tag: "NULLIFY", icon: KeyRound, title: "Nullifier", sub: "Poseidon Hash" },
+  { tag: "RELAY", icon: Cpu, title: "Execution", sub: "Client Self-Relay" },
+  { tag: "SETTLED", icon: CheckCircle2, title: "Settled", sub: "Unlinked Exit" },
+];
+
 export const WithdrawalStep3: React.FC = () => {
   const [cycleIndex, setCycleIndex] = useState(0);
   const [stage, setStage] = useState(1); // 1 = tree proof, 2 = nullifier, 3 = relayer broadcast, 4 = settled
@@ -99,47 +107,43 @@ export const WithdrawalStep3: React.FC = () => {
         minHeight: "480px",
       }}
     >
-      {/* Terminal Header */}
+      {/* Terminal Header — Locked height with nowrap to prevent any layout jumping */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          flexWrap: "wrap",
+          flexWrap: "nowrap",
           gap: "var(--space-3)",
           borderBottom: "1px solid var(--color-hairline)",
           paddingBottom: "var(--space-4)",
+          minHeight: "44px",
+          boxSizing: "border-box",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
-          <div style={{ display: "flex", gap: "var(--space-2)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0, overflow: "hidden" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "3px 8px",
+              borderRadius: "4px",
+              backgroundColor: "rgba(255, 140, 0, 0.08)",
+              border: "1px solid rgba(255, 140, 0, 0.22)",
+              flexShrink: 0,
+            }}
+          >
             <span
               style={{
-                width: 10,
-                height: 10,
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-border-strong)",
-                display: "inline-block",
+                fontFamily: "monospace",
+                fontSize: "10px",
+                fontWeight: 700,
+                color: "#FF8C00",
+                letterSpacing: "0.06em",
               }}
-            />
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-border-strong)",
-                display: "inline-block",
-              }}
-            />
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "var(--radius-full)",
-                background: "var(--color-border-strong)",
-                display: "inline-block",
-              }}
-            />
+            >
+              SOLANA RING
+            </span>
           </div>
           <span
             style={{
@@ -147,13 +151,16 @@ export const WithdrawalStep3: React.FC = () => {
               fontSize: "var(--text-body)",
               fontWeight: 500,
               color: "var(--color-text)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             ZK Withdrawal Terminal // Decoupled Exit
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", flexShrink: 0, whiteSpace: "nowrap" }}>
           <div
             style={{
               display: "inline-flex",
@@ -190,26 +197,22 @@ export const WithdrawalStep3: React.FC = () => {
               color: "var(--color-text)",
             }}
           >
-            {current.noteId} · <CountUp value={current.grossAmount} />
+            <CountUp value={current.grossAmount} />
           </div>
         </div>
       </div>
 
-      {/* 4-Stage Stepper Progress Strip */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "var(--space-3)" }}>
-        {[
-          { num: "01", title: "Membership", sub: "WASM Tree Proof" },
-          { num: "02", title: "Nullifier", sub: "Poseidon Hash" },
-          { num: "03", title: "Execution", sub: "Client Self-Relay" },
-          { num: "04", title: "Settled", sub: "Unlinked Exit" },
-        ].map((st, i) => {
+      {/* 4-Stage Stepper Progress Strip — Semantic badges & icons, no numbers or dots */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "var(--space-3)" }}>
+        {WITHDRAWAL_STAGES.map((st, i) => {
           const isPassed = stage > i + 1;
           const isCurrent = stage === i + 1;
           const isDone = isPassed || isCurrent;
+          const Icon = st.icon;
 
           return (
             <div
-              key={st.num}
+              key={st.tag}
               style={{
                 background: "var(--color-surface)",
                 padding: "var(--space-3) var(--space-4)",
@@ -221,28 +224,30 @@ export const WithdrawalStep3: React.FC = () => {
                 flexDirection: "column",
                 gap: "var(--space-1)",
                 transition: "all 0.25s ease",
+                minHeight: "82px",
+                boxSizing: "border-box",
+                justifyContent: "space-between",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: "18px" }}>
                 <span
                   style={{
                     fontFamily: "monospace",
-                    fontSize: "var(--text-caption)",
-                    color: isDone ? "var(--color-accent)" : "var(--color-faint)",
+                    fontSize: "10px",
+                    color: isCurrent ? "var(--color-accent)" : isPassed ? "#059669" : "var(--color-faint)",
                     fontWeight: 700,
+                    letterSpacing: "0.06em",
                     lineHeight: 1,
                   }}
                 >
-                  {st.num}
+                  [{st.tag}]
                 </span>
-                <span
+                <Icon
+                  size={13}
                   style={{
-                    width: "7px",
-                    height: "7px",
-                    borderRadius: "50%",
-                    backgroundColor: isCurrent || isPassed ? "var(--color-accent)" : "rgba(26, 26, 26, 0.15)",
-                    transition: "background-color 0.2s ease",
-                    display: "inline-block",
+                    color: isCurrent ? "var(--color-accent)" : isPassed ? "#059669" : "rgba(26, 26, 26, 0.2)",
+                    transition: "color 0.2s ease",
+                    flexShrink: 0,
                   }}
                 />
               </div>
@@ -252,6 +257,9 @@ export const WithdrawalStep3: React.FC = () => {
                   fontSize: "var(--text-body-sm)",
                   fontWeight: 600,
                   color: isDone ? "var(--color-text)" : "var(--color-muted)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 {st.title}
@@ -261,6 +269,9 @@ export const WithdrawalStep3: React.FC = () => {
                   fontFamily: "monospace",
                   fontSize: "var(--text-caption)",
                   color: "var(--color-muted)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 {st.sub}
@@ -274,7 +285,7 @@ export const WithdrawalStep3: React.FC = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: "var(--space-3)",
         }}
       >
@@ -351,7 +362,7 @@ export const WithdrawalStep3: React.FC = () => {
               whiteSpace: "nowrap",
             }}
           >
-            <span style={{ color: "var(--color-accent)", fontWeight: 700 }}>●</span>
+            <Check size={12} style={{ color: "var(--color-accent)", strokeWidth: 2.5, flexShrink: 0 }} />
             LeanIMT Depth 20 · Valid
           </div>
         </div>
@@ -391,7 +402,7 @@ export const WithdrawalStep3: React.FC = () => {
               whiteSpace: "nowrap",
             }}
           >
-            <span style={{ color: "var(--color-accent)", fontWeight: 700 }}>●</span>
+            <Check size={12} style={{ color: "var(--color-accent)", strokeWidth: 2.5, flexShrink: 0 }} />
             ASP Self-Attested · Active
           </div>
         </div>
@@ -482,40 +493,40 @@ export const WithdrawalStep3: React.FC = () => {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+            gridTemplateColumns: "repeat(4, 1fr)",
             gap: "var(--space-3)",
             paddingTop: "var(--space-2)",
             borderTop: "1px dashed var(--color-hairline)",
           }}
         >
           <div>
-            <div style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)" }}>Gross Amount</div>
-            <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600 }}>
+            <div style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)", whiteSpace: "nowrap" }}>Gross Amount</div>
+            <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, whiteSpace: "nowrap" }}>
               <CountUp value={current.grossAmount} />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)" }}>Protocol Route</div>
-            <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600 }}>
+            <div style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)", whiteSpace: "nowrap" }}>Protocol Route</div>
+            <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, whiteSpace: "nowrap" }}>
               Client Self-Relay
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)" }}>Intermediary Markup</div>
-            <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-text)" }}>
+            <div style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)", whiteSpace: "nowrap" }}>Intermediary Markup</div>
+            <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-text)", whiteSpace: "nowrap" }}>
               0 BPS (Direct)
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)" }}>Net Delivered</div>
-            <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 700, color: "var(--color-accent)" }}>
+            <div style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)", whiteSpace: "nowrap" }}>Net Delivered</div>
+            <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 700, color: "var(--color-accent)", whiteSpace: "nowrap" }}>
               <CountUp value={current.netDelivered} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Real-time Stage Status Banner */}
+      {/* Real-time Stage Status Banner — Locked height */}
       <div
         style={{
           padding: "var(--space-3) var(--space-4)",
@@ -526,8 +537,11 @@ export const WithdrawalStep3: React.FC = () => {
           gridTemplateColumns: "1fr auto",
           alignItems: "center",
           gap: "var(--space-3)",
-          minHeight: "56px",
+          height: "58px",
+          minHeight: "58px",
+          maxHeight: "58px",
           boxSizing: "border-box",
+          overflow: "hidden",
         }}
       >
         <span
