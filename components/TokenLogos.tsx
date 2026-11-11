@@ -96,13 +96,73 @@ export const SolanaLogoMark: React.FC<LogoProps> = ({
 /**
  * Dynamic token logo by asset / symbol
  */
+export const SolLogo: React.FC<LogoProps> = ({ size = 18, className = "" }) => (
+  <img
+    src="/assets/logo/solana.svg"
+    alt="Solana"
+    width={size}
+    height={size}
+    style={{ width: `${size}px`, height: `${size}px`, objectFit: "contain", display: "inline-block", verticalAlign: "middle", flexShrink: 0 }}
+    className={className}
+  />
+);
+
+export const UsdcLogo: React.FC<LogoProps> = ({ size = 18, className = "" }) => (
+  <img
+    src="/assets/logo/usdc.svg"
+    alt="USDC"
+    width={size}
+    height={size}
+    style={{ width: `${size}px`, height: `${size}px`, objectFit: "contain", display: "inline-block", verticalAlign: "middle", flexShrink: 0 }}
+    className={className}
+  />
+);
+
+export const CertoraLogo: React.FC<{ height?: number; className?: string }> = ({ height = 18, className = "" }) => (
+  <img
+    src="/assets/logo/certora.png"
+    alt="Certora"
+    style={{ height: `${height}px`, width: "auto", display: "inline-block", verticalAlign: "middle", opacity: 0.9 }}
+    className={className}
+  />
+);
+
+export const OtterSecLogo: React.FC<{ height?: number; className?: string }> = ({ height = 18, className = "" }) => (
+  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }} className={className}>
+    <img
+      src="/assets/logo/ottersec.png"
+      alt="OtterSec"
+      style={{ height: `${height}px`, width: "auto", display: "inline-block" }}
+    />
+    <span style={{ fontSize: `${Math.round(height * 0.75)}px`, fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-headline)" }}>
+      OtterSec
+    </span>
+  </div>
+);
+
+export const ZkSecurityLogo: React.FC<{ height?: number; className?: string }> = ({ height = 18, className = "" }) => (
+  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }} className={className}>
+    <img
+      src="/assets/logo/zksecurity.svg"
+      alt="zkSecurity"
+      style={{ height: `${height}px`, width: "auto", display: "inline-block" }}
+    />
+    <span style={{ fontSize: `${Math.round(height * 0.75)}px`, fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-headline)" }}>
+      zkSecurity
+    </span>
+  </div>
+);
+
 export const TokenIcon: React.FC<{
   symbol?: string;
   asset?: string;
   size?: number;
   className?: string;
 }> = ({ symbol, asset, size = 16, className = "" }) => {
-  const sym = (symbol || "").toUpperCase();
+  const sym = (symbol || asset || "").toUpperCase();
+  if (sym === "SOL" || sym === "WSOL") return <SolLogo size={size} className={className} />;
+  if (sym === "USDC") return <UsdcLogo size={size} className={className} />;
+
   const isEth =
     sym === "ETH" ||
     sym === "WETH" ||

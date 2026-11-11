@@ -20,7 +20,7 @@ import {
 import { loadWallet, type StoredWallet } from "@/lib/wallets";
 import { WalletModal } from "@/components/WalletModal";
 import { ZkShieldRadar } from "@/components/ZkShieldRadar";
-import { SolanaLogo } from "@/components/TokenLogos";
+import { SolanaLogo, SolLogo, UsdcLogo, CertoraLogo, OtterSecLogo, ZkSecurityLogo } from "@/components/TokenLogos";
 
 export type AppWorkstationTab = "shield" | "swap" | "lock" | "withdraw" | "vault";
 
@@ -335,20 +335,56 @@ function WorkstationContent() {
 
         <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "var(--space-3)",
-            fontFamily: "var(--font-mono)",
-            fontSize: "12px",
-            color: "var(--color-muted)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "8px",
           }}
         >
-          <span>Solana SVM</span>
-          <span style={{ opacity: 0.3 }}>/</span>
-          <span>Groth16 ZK-SNARK</span>
-          <span style={{ opacity: 0.3 }}>/</span>
-          <span>ML-KEM-768</span>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "12px",
+              padding: "6px 12px",
+              borderRadius: "var(--radius-sm)",
+              backgroundColor: "rgba(26, 26, 26, 0.03)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "10px",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "var(--color-muted)",
+              }}
+            >
+              Audited by
+            </span>
+            <CertoraLogo height={14} />
+            <OtterSecLogo height={14} />
+            <ZkSecurityLogo height={14} />
+          </div>
+
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "var(--space-3)",
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              color: "var(--color-muted)",
+            }}
+          >
+            <span>Solana SVM</span>
+            <span style={{ opacity: 0.3 }}>/</span>
+            <span>Groth16 ZK-SNARK</span>
+            <span style={{ opacity: 0.3 }}>/</span>
+            <span>ML-KEM-768</span>
+          </div>
         </div>
       </div>
 
@@ -478,9 +514,10 @@ function WorkstationContent() {
                     key={a}
                     type="button"
                     onClick={() => setShieldAsset(a)}
+                    className="no-hover"
                     style={{
                       flex: 1,
-                      padding: "10px 14px",
+                      padding: "12px 14px",
                       borderRadius: "var(--radius-md)",
                       border: shieldAsset === a ? "2px solid #FF8C00" : "1px solid var(--color-border)",
                       backgroundColor: shieldAsset === a ? "rgba(255, 140, 0, 0.05)" : "#ffffff",
@@ -489,14 +526,22 @@ function WorkstationContent() {
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
+                      justifyContent: "space-between",
+                      gap: "10px",
                     }}
                   >
-                    <span>{a}</span>
-                    <span style={{ fontSize: "11px", color: "var(--color-muted)", fontWeight: 500 }}>
-                      {a === "SOL" ? "Native Solana" : "SPL Token"}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      {a === "SOL" ? <SolLogo size={22} /> : <UsdcLogo size={22} />}
+                      <div style={{ textAlign: "left" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 700, lineHeight: 1.2 }}>{a}</div>
+                        <div style={{ fontSize: "11px", color: "var(--color-muted)", fontWeight: 500, marginTop: "2px" }}>
+                          {a === "SOL" ? "Native Solana" : "SPL Token"}
+                        </div>
+                      </div>
+                    </div>
+                    {shieldAsset === a && (
+                      <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#FF8C00" }} />
+                    )}
                   </button>
                 ))}
               </div>
@@ -504,28 +549,42 @@ function WorkstationContent() {
               {/* Amount Input */}
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>
-                  Deposit Amount ({shieldAsset})
+                  Deposit Amount
                 </label>
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  required
-                  value={shieldAmount}
-                  onChange={(e) => setShieldAmount(e.target.value)}
-                  placeholder="0.00"
+                <div
                   style={{
-                    width: "100%",
-                    padding: "12px 14px",
-                    borderRadius: "var(--radius-md)",
+                    display: "flex",
+                    alignItems: "center",
                     border: "1px solid var(--color-border)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "16px",
-                    color: "var(--color-text)",
-                    outline: "none",
-                    boxSizing: "border-box",
+                    borderRadius: "var(--radius-md)",
+                    backgroundColor: "#ffffff",
+                    padding: "0 14px",
                   }}
-                />
+                >
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    value={shieldAmount}
+                    onChange={(e) => setShieldAmount(e.target.value)}
+                    placeholder="0.00"
+                    style={{
+                      flex: 1,
+                      padding: "12px 0",
+                      border: "none",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "16px",
+                      color: "var(--color-text)",
+                      outline: "none",
+                      background: "transparent",
+                    }}
+                  />
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingLeft: "8px" }}>
+                    {shieldAsset === "SOL" ? <SolLogo size={18} /> : <UsdcLogo size={18} />}
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{shieldAsset}</span>
+                  </div>
+                </div>
               </div>
 
               {/* Memo / Inscription */}
@@ -606,21 +665,35 @@ function WorkstationContent() {
                   <label style={{ display: "block", fontSize: "11px", color: "var(--color-muted)", marginBottom: "4px" }}>
                     Pay Asset
                   </label>
-                  <select
-                    value={swapFrom}
-                    onChange={(e) => setSwapFrom(e.target.value as "SOL" | "USDC")}
+                  <div
                     style={{
-                      width: "100%",
-                      padding: "10px 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 12px",
                       borderRadius: "var(--radius-md)",
                       border: "1px solid var(--color-border)",
-                      fontSize: "14px",
-                      fontWeight: 600,
+                      backgroundColor: "#ffffff",
                     }}
                   >
-                    <option value="SOL">SOL</option>
-                    <option value="USDC">USDC</option>
-                  </select>
+                    {swapFrom === "SOL" ? <SolLogo size={18} /> : <UsdcLogo size={18} />}
+                    <select
+                      value={swapFrom}
+                      onChange={(e) => setSwapFrom(e.target.value as "SOL" | "USDC")}
+                      style={{
+                        width: "100%",
+                        border: "none",
+                        outline: "none",
+                        background: "transparent",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value="SOL">SOL (Native)</option>
+                      <option value="USDC">USDC (SPL)</option>
+                    </select>
+                  </div>
                 </div>
 
                 <button
@@ -630,6 +703,7 @@ function WorkstationContent() {
                     setSwapFrom(swapTo);
                     setSwapTo(temp);
                   }}
+                  className="no-hover"
                   style={{
                     padding: "8px",
                     borderRadius: "50%",
@@ -637,6 +711,9 @@ function WorkstationContent() {
                     backgroundColor: "#ffffff",
                     cursor: "pointer",
                     marginTop: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   <ArrowLeftRight size={14} />
@@ -646,48 +723,76 @@ function WorkstationContent() {
                   <label style={{ display: "block", fontSize: "11px", color: "var(--color-muted)", marginBottom: "4px" }}>
                     Receive Asset
                   </label>
-                  <select
-                    value={swapTo}
-                    onChange={(e) => setSwapTo(e.target.value as "SOL" | "USDC")}
+                  <div
                     style={{
-                      width: "100%",
-                      padding: "10px 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 12px",
                       borderRadius: "var(--radius-md)",
                       border: "1px solid var(--color-border)",
-                      fontSize: "14px",
-                      fontWeight: 600,
+                      backgroundColor: "#ffffff",
                     }}
                   >
-                    <option value="USDC">USDC</option>
-                    <option value="SOL">SOL</option>
-                  </select>
+                    {swapTo === "USDC" ? <UsdcLogo size={18} /> : <SolLogo size={18} />}
+                    <select
+                      value={swapTo}
+                      onChange={(e) => setSwapTo(e.target.value as "SOL" | "USDC")}
+                      style={{
+                        width: "100%",
+                        border: "none",
+                        outline: "none",
+                        background: "transparent",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value="USDC">USDC (SPL)</option>
+                      <option value="SOL">SOL (Native)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>
-                  Swap Amount ({swapFrom})
+                  Swap Amount
                 </label>
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  required
-                  value={swapAmount}
-                  onChange={(e) => setSwapAmount(e.target.value)}
-                  placeholder="0.00"
+                <div
                   style={{
-                    width: "100%",
-                    padding: "12px 14px",
-                    borderRadius: "var(--radius-md)",
+                    display: "flex",
+                    alignItems: "center",
                     border: "1px solid var(--color-border)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "16px",
-                    color: "var(--color-text)",
-                    outline: "none",
-                    boxSizing: "border-box",
+                    borderRadius: "var(--radius-md)",
+                    backgroundColor: "#ffffff",
+                    padding: "0 14px",
                   }}
-                />
+                >
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    value={swapAmount}
+                    onChange={(e) => setSwapAmount(e.target.value)}
+                    placeholder="0.00"
+                    style={{
+                      flex: 1,
+                      padding: "12px 0",
+                      border: "none",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "16px",
+                      color: "var(--color-text)",
+                      outline: "none",
+                      background: "transparent",
+                    }}
+                  />
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingLeft: "8px" }}>
+                    {swapFrom === "SOL" ? <SolLogo size={18} /> : <UsdcLogo size={18} />}
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{swapFrom}</span>
+                  </div>
+                </div>
               </div>
 
               <div
@@ -698,13 +803,17 @@ function WorkstationContent() {
                   border: "1px solid var(--color-border)",
                   fontSize: "12px",
                   display: "flex",
+                  alignItems: "center",
                   justifyContent: "space-between",
                   color: "var(--color-muted)",
                 }}
               >
                 <span>Estimated Output:</span>
-                <span style={{ fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-mono)" }}>
-                  {swapAmount ? (swapFrom === "SOL" ? (Number(swapAmount) * 150).toFixed(2) : (Number(swapAmount) / 150).toFixed(4)) : "0.00"} {swapTo}
+                <span style={{ fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-mono)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                  {swapTo === "USDC" ? <UsdcLogo size={15} /> : <SolLogo size={15} />}
+                  <span>
+                    {swapAmount ? (swapFrom === "SOL" ? (Number(swapAmount) * 150).toFixed(2) : (Number(swapAmount) / 150).toFixed(4)) : "0.00"} {swapTo}
+                  </span>
                 </span>
               </div>
 
@@ -761,21 +870,35 @@ function WorkstationContent() {
                   <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>
                     Asset
                   </label>
-                  <select
-                    value={lockAsset}
-                    onChange={(e) => setLockAsset(e.target.value as "SOL" | "USDC")}
+                  <div
                     style={{
-                      width: "100%",
-                      padding: "12px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 14px",
                       borderRadius: "var(--radius-md)",
                       border: "1px solid var(--color-border)",
-                      fontSize: "14px",
-                      fontWeight: 600,
+                      backgroundColor: "#ffffff",
                     }}
                   >
-                    <option value="SOL">SOL (Native)</option>
-                    <option value="USDC">USDC (SPL)</option>
-                  </select>
+                    {lockAsset === "SOL" ? <SolLogo size={18} /> : <UsdcLogo size={18} />}
+                    <select
+                      value={lockAsset}
+                      onChange={(e) => setLockAsset(e.target.value as "SOL" | "USDC")}
+                      style={{
+                        width: "100%",
+                        border: "none",
+                        outline: "none",
+                        background: "transparent",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value="SOL">SOL (Native)</option>
+                      <option value="USDC">USDC (SPL)</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -792,6 +915,7 @@ function WorkstationContent() {
                       border: "1px solid var(--color-border)",
                       fontSize: "14px",
                       fontWeight: 600,
+                      backgroundColor: "#ffffff",
                     }}
                   >
                     <option value={7}>7 Days</option>
@@ -804,28 +928,42 @@ function WorkstationContent() {
 
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>
-                  Lock Amount ({lockAsset})
+                  Lock Amount
                 </label>
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  required
-                  value={lockAmount}
-                  onChange={(e) => setLockAmount(e.target.value)}
-                  placeholder="0.00"
+                <div
                   style={{
-                    width: "100%",
-                    padding: "12px 14px",
-                    borderRadius: "var(--radius-md)",
+                    display: "flex",
+                    alignItems: "center",
                     border: "1px solid var(--color-border)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "16px",
-                    color: "var(--color-text)",
-                    outline: "none",
-                    boxSizing: "border-box",
+                    borderRadius: "var(--radius-md)",
+                    backgroundColor: "#ffffff",
+                    padding: "0 14px",
                   }}
-                />
+                >
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    required
+                    value={lockAmount}
+                    onChange={(e) => setLockAmount(e.target.value)}
+                    placeholder="0.00"
+                    style={{
+                      flex: 1,
+                      padding: "12px 0",
+                      border: "none",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "16px",
+                      color: "var(--color-text)",
+                      outline: "none",
+                      background: "transparent",
+                    }}
+                  />
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingLeft: "8px" }}>
+                    {lockAsset === "SOL" ? <SolLogo size={18} /> : <UsdcLogo size={18} />}
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{lockAsset}</span>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -914,6 +1052,7 @@ function WorkstationContent() {
                     border: "1px solid var(--color-border)",
                     fontSize: "14px",
                     fontFamily: "var(--font-mono)",
+                    backgroundColor: "#ffffff",
                   }}
                 >
                   {notes.filter((n) => !n.spent).map((n) => (
@@ -922,6 +1061,35 @@ function WorkstationContent() {
                     </option>
                   ))}
                 </select>
+
+                {(() => {
+                  const target = notes.find((n) => n.id === withdrawNoteId) || notes.filter((n) => !n.spent)[0];
+                  if (!target) return null;
+                  return (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "10px 14px",
+                        borderRadius: "var(--radius-sm)",
+                        backgroundColor: "rgba(26, 26, 26, 0.025)",
+                        border: "1px solid var(--color-border)",
+                        marginTop: "8px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        {target.asset === "SOL" ? <SolLogo size={18} /> : <UsdcLogo size={18} />}
+                        <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "14px" }}>
+                          {target.amount} {target.asset}
+                        </span>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--color-muted)" }}>
+                        Leaf #{target.leafIndex} · Decoupled Exit
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div>
@@ -1048,6 +1216,7 @@ function WorkstationContent() {
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        {note.asset === "SOL" ? <SolLogo size={18} /> : <UsdcLogo size={18} />}
                         <span
                           style={{
                             fontSize: "16px",
@@ -1124,10 +1293,16 @@ function WorkstationContent() {
                   borderRadius: "var(--radius-md)",
                   backgroundColor: "rgba(255, 140, 0, 0.05)",
                   border: "1px solid rgba(255, 140, 0, 0.18)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
                 }}
               >
-                <div style={{ fontSize: "11px", color: "var(--color-muted)" }}>Shielded SOL</div>
-                <div style={{ fontSize: "20px", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--color-text)", marginTop: "4px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: "11px", color: "var(--color-muted)" }}>Shielded SOL</span>
+                  <SolLogo size={16} />
+                </div>
+                <div style={{ fontSize: "20px", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--color-text)" }}>
                   {totalSol.toFixed(2)} SOL
                 </div>
               </div>
@@ -1138,11 +1313,17 @@ function WorkstationContent() {
                   borderRadius: "var(--radius-md)",
                   backgroundColor: "rgba(26, 26, 26, 0.025)",
                   border: "1px solid var(--color-border)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
                 }}
               >
-                <div style={{ fontSize: "11px", color: "var(--color-muted)" }}>Shielded USDC</div>
-                <div style={{ fontSize: "20px", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--color-text)", marginTop: "4px" }}>
-                  {totalUsdc.toLocaleString()} USDC
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: "11px", color: "var(--color-muted)" }}>Shielded USDC</span>
+                  <UsdcLogo size={16} />
+                </div>
+                <div style={{ fontSize: "20px", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--color-text)" }}>
+                  {totalUsdc.toFixed(2)} USDC
                 </div>
               </div>
             </div>
@@ -1169,6 +1350,51 @@ function WorkstationContent() {
 
           {/* Real-time Telemetry Radar */}
           <ZkShieldRadar />
+
+          {/* Core Security & Protocol Audit Trust Card (Veil Style) */}
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "var(--radius-lg)",
+              backgroundColor: "#ffffff",
+              border: "1px solid var(--color-border)",
+              boxShadow: "0 4px 16px rgba(26, 26, 26, 0.04)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "var(--color-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Audited Protocols &amp; Security
+              </span>
+              <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "#059669", fontWeight: 700, backgroundColor: "rgba(16, 185, 129, 0.08)", padding: "2px 6px", borderRadius: "4px" }}>
+                ON-CHAIN VERIFIED
+              </span>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "12px",
+                padding: "12px 14px",
+                borderRadius: "var(--radius-md)",
+                backgroundColor: "rgba(26, 26, 26, 0.02)",
+                border: "1px solid var(--color-border)",
+              }}
+            >
+              <CertoraLogo height={18} />
+              <OtterSecLogo height={18} />
+              <ZkSecurityLogo height={18} />
+            </div>
+
+            <div style={{ fontSize: "12px", color: "var(--color-muted)", lineHeight: "1.5" }}>
+              Core Solana Privacy Rings protocol circuits independently audited by Certora, OtterSec, and zkSecurity. Settle privately on Solana with zero intermediary custody.
+            </div>
+          </div>
 
           {/* Privacy Security Invariants Box */}
           <div
