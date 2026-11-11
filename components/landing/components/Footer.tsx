@@ -33,13 +33,13 @@ export const Footer: React.FC = () => {
             </div>
             <a
               className="landing-footer__email"
-              href="https://x.com/zoliusvault"
+              href="https://x.com/ZoliusVault"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "16px", color: "#ffac47", textDecoration: "none", fontSize: "12px", fontWeight: 600 }}
             >
               <XLogo size={13} color="currentColor" />
-              <span>Follow @zoliusvault</span>
+              <span>Follow @ZoliusVault</span>
             </a>
           </div>
 
@@ -94,7 +94,7 @@ export const Footer: React.FC = () => {
           <p>© 2026 Zolius Vault. Built on Solana Privacy Rings.</p>
           <div className="landing-footer__socials">
             <a
-              href="https://x.com/zoliusvault"
+              href="https://x.com/ZoliusVault"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}

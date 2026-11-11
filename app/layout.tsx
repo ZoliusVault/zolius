@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     "Self-Custodial",
   ],
   authors: [{ name: "Zolius Vault" }],
-  creator: "@zoliusvault",
+  creator: "@ZoliusVault",
   openGraph: {
     title: "Zolius Vault — Self-Custodial Confidential Transfers on Solana",
     description:
@@ -43,8 +43,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@zoliusvault",
-    creator: "@zoliusvault",
+    site: "@ZoliusVault",
+    creator: "@ZoliusVault",
     title: "Zolius Vault — Self-Custodial Confidential Transfers on Solana",
     description:
       "Self-custodial confidential transfers built on Solana Privacy Rings, protected by hybrid ML-KEM-768 quantum vaults.",

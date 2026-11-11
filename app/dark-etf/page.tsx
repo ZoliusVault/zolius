@@ -24,7 +24,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@zoliusvault",
+    site: "@ZoliusVault",
+    creator: "@ZoliusVault",
     title: "Zolius Dark ETF — Coming Soon",
     description:
       "Build a private basket of tokens on Solana. Hold it shielded in privacy vaults, rebalance in the dark.",

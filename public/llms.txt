@@ -4,7 +4,7 @@
 > Protocol: Solana Privacy Rings (ML-KEM-768 + Groth16 zk-SNARKs)
 > Network: Solana Mainnet-Beta
 > App: https://zolius.com/app
-> Twitter / X: https://x.com/zoliusvault
+> Twitter / X: https://x.com/ZoliusVault
 
 ## Overview
 Zolius Vault is a self-custodial privacy workstation on Solana:

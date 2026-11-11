@@ -104,11 +104,11 @@ export const Header: React.FC = () => {
         {/* Action Group: Official X Button + Launch Vault */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
           <a
-            href="https://x.com/zoliusvault"
+            href="https://x.com/ZoliusVault"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Official X (Twitter) Account @zoliusvault"
-            title="Official X: @zoliusvault"
+            aria-label="Official X (Twitter) Account @ZoliusVault"
+            title="Official X: @ZoliusVault"
             className="lp-btn lp-btn--filled hidden sm:inline-flex"
             style={{
               width: "2.25rem",

@@ -75,7 +75,7 @@ export const WaitlistForm: React.FC = () => {
 
   const shareOnX = () => {
     const text = encodeURIComponent(
-      "Just joined the @zoliusvault Dark ETF waitlist — confidential token baskets with zero public mempool leakage on Solana.\n\nJoin here: https://zolius.vault/dark-etf"
+      "Just joined the @ZoliusVault Dark ETF waitlist — confidential token baskets with zero public mempool leakage on Solana.\n\nJoin here: https://zolius.vault/dark-etf"
     );
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "noopener,noreferrer");
   };

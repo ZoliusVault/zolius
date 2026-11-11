@@ -197,11 +197,11 @@ export function Navbar() {
 
 
             <a
-              href="https://x.com/zoliusvault"
+              href="https://x.com/ZoliusVault"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Official X (Twitter) Account"
-              title="Official X: @zoliusvault"
+              aria-label="Official X (Twitter) Account @ZoliusVault"
+              title="Official X: @ZoliusVault"
               className="lp-btn lp-btn--filled hidden sm:inline-flex"
               style={{
                 width: "2.25rem",
@@ -584,7 +584,7 @@ export function Navbar() {
               }}
             >
               <a
-                href="https://x.com/veilpools"
+                href="https://x.com/ZoliusVault"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="lp-btn lp-btn--filled"
@@ -601,7 +601,7 @@ export function Navbar() {
                 }}
               >
                 <XLogo size={14} color="currentColor" />
-                <span>Follow @veilpools on X</span>
+                <span>Follow @ZoliusVault on X</span>
               </a>
 
               <div
