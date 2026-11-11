@@ -225,6 +225,9 @@ export const DashboardStep4: React.FC = () => {
               flexDirection: "column",
               gap: "var(--space-6)",
               minWidth: 0,
+              minHeight: "264px",
+              height: "264px",
+              boxSizing: "border-box",
             }}
           >
             {visibleItems.map((item) => (

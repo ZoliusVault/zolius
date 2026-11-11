@@ -173,15 +173,13 @@ select:focus-visible,
    UNIVERSAL BUTTON HOVER & TACTILE ENGINE (Veil Luxury Brand)
    ========================================================================== */
 
-button:not(:disabled):not(.no-hover),
-a[role="button"]:not([aria-disabled="true"]):not(.no-hover),
 .lp-btn,
-.ds-btn {
+.ds-btn,
+.btn-tactile {
   cursor: pointer;
   position: relative;
-  will-change: transform, box-shadow, filter, background, border-color;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+  will-change: box-shadow, filter, background, border-color;
+  transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               background 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -189,48 +187,17 @@ a[role="button"]:not([aria-disabled="true"]):not(.no-hover),
               filter 0.2s ease;
 }
 
-/* Clear, tactile lift and brightness on hover */
-button:not(:disabled):not(.no-hover):hover,
-a[role="button"]:not([aria-disabled="true"]):not(.no-hover):hover {
-  transform: translateY(-2px);
-  filter: brightness(1.08);
+/* Subtle brightness lift on primary action buttons without vertical jump */
+.lp-btn--accent:hover,
+.btn-accent:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 4px 18px rgba(255, 140, 0, 0.32);
 }
 
-/* Satisfying tactile press on click */
-button:not(:disabled):not(.no-hover):active,
-a[role="button"]:not([aria-disabled="true"]):not(.no-hover):active {
-  transform: translateY(1px) scale(0.97) !important;
-}
-
-/* Amber / Brand Primary Buttons Across the App */
-button[style*="var(--color-brand)"]:not(:disabled):hover,
-button[style*="var(--color-accent)"]:not(:disabled):hover,
-button[style*="#FF8C00"]:not(:disabled):hover {
-  background: linear-gradient(135deg, #FFA726 0%, #FF8C00 100%) !important;
-  border-color: #FFE082 !important;
-  box-shadow: 0 0 28px rgba(255, 140, 0, 0.6), 0 8px 24px rgba(255, 140, 0, 0.35) !important;
-  color: #111111 !important;
-  transform: translateY(-2.5px) scale(1.02) !important;
-}
-
-/* Dark Surface Action Buttons Across the App */
-button[style*="var(--color-text)"]:not(:disabled):hover,
-button[style*="#171619"]:not(:disabled):hover,
-button[style*="#1a1a1a"]:not(:disabled):hover {
-  background: linear-gradient(180deg, #2E2B33 0%, #171619 100%) !important;
-  border-color: #FF8C00 !important;
-  box-shadow: 0 0 24px -2px rgba(255, 140, 0, 0.45), 0 8px 24px rgba(0, 0, 0, 0.45) !important;
-  color: #ffffff !important;
-  transform: translateY(-2px) scale(1.015) !important;
-}
-
-/* White / Surface Secondary Buttons Across the App */
-button[style*="#ffffff"]:not(:disabled):not([style*="color: #ffffff"]):hover,
-button[style*="background: #ffffff"]:not(:disabled):hover,
-button[style*="backgroundColor: #ffffff"]:not(:disabled):hover {
-  border-color: #FF8C00 !important;
-  box-shadow: 0 0 16px rgba(255, 140, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-  transform: translateY(-2px);
+.lp-btn--filled:hover,
+.btn-filled:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 

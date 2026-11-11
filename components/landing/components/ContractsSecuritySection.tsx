@@ -222,6 +222,8 @@ export const ContractsSecuritySection: React.FC = () => {
                     key={prog.id}
                     type="button"
                     onClick={() => setSelectedProgramId(prog.id)}
+                    className="no-hover prog-selector-item"
+                    data-selected={isSelected}
                     style={{
                       display: "flex",
                       flexDirection: "column",
@@ -233,10 +235,11 @@ export const ContractsSecuritySection: React.FC = () => {
                       borderRadius: "var(--radius-md)",
                       border: "1px solid",
                       borderColor: isSelected ? "#FF8C00" : "var(--color-border)",
-                      backgroundColor: isSelected ? "rgba(255, 140, 0, 0.03)" : "#ffffff",
+                      backgroundColor: isSelected ? "rgba(255, 140, 0, 0.04)" : "#ffffff",
                       boxShadow: isSelected ? "0 4px 16px rgba(255, 140, 0, 0.12)" : "0 2px 8px rgba(26, 26, 26, 0.03)",
                       textAlign: "left",
                       cursor: "pointer",
+                      transform: "none",
                       transition: "border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease",
                     }}
                   >

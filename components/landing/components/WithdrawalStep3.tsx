@@ -223,32 +223,28 @@ export const WithdrawalStep3: React.FC = () => {
                 transition: "all 0.25s ease",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: "18px" }}>
                 <span
                   style={{
                     fontFamily: "monospace",
                     fontSize: "var(--text-caption)",
                     color: isDone ? "var(--color-accent)" : "var(--color-faint)",
                     fontWeight: 700,
+                    lineHeight: 1,
                   }}
                 >
                   {st.num}
                 </span>
-                {isPassed && (
-                  <span style={{ color: "var(--color-accent)", fontSize: "11px", fontWeight: 700 }}>
-                    ●
-                  </span>
-                )}
-                {isCurrent && (
-                  <span
-                    style={{
-                      width: "6px",
-                      height: "6px",
-                      borderRadius: "50%",
-                      backgroundColor: "var(--color-accent)",
-                    }}
-                  />
-                )}
+                <span
+                  style={{
+                    width: "7px",
+                    height: "7px",
+                    borderRadius: "50%",
+                    backgroundColor: isCurrent || isPassed ? "var(--color-accent)" : "rgba(26, 26, 26, 0.15)",
+                    transition: "background-color 0.2s ease",
+                    display: "inline-block",
+                  }}
+                />
               </div>
               <div
                 style={{
@@ -288,6 +284,11 @@ export const WithdrawalStep3: React.FC = () => {
             padding: "var(--space-3) var(--space-4)",
             borderRadius: "var(--radius-sm)",
             border: "1px solid var(--color-hairline)",
+            minHeight: "74px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
           }}
         >
           <div
@@ -306,6 +307,9 @@ export const WithdrawalStep3: React.FC = () => {
               fontSize: "var(--text-body-sm)",
               fontWeight: 600,
               color: "var(--color-text)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             {current.noteId} (<CountUp value={current.grossAmount} />)
@@ -318,6 +322,11 @@ export const WithdrawalStep3: React.FC = () => {
             padding: "var(--space-3) var(--space-4)",
             borderRadius: "var(--radius-sm)",
             border: "1px solid var(--color-hairline)",
+            minHeight: "74px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
           }}
         >
           <div
@@ -339,6 +348,7 @@ export const WithdrawalStep3: React.FC = () => {
               display: "flex",
               alignItems: "center",
               gap: 6,
+              whiteSpace: "nowrap",
             }}
           >
             <span style={{ color: "var(--color-accent)", fontWeight: 700 }}>●</span>
@@ -352,6 +362,11 @@ export const WithdrawalStep3: React.FC = () => {
             padding: "var(--space-3) var(--space-4)",
             borderRadius: "var(--radius-sm)",
             border: "1px solid var(--color-hairline)",
+            minHeight: "74px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
           }}
         >
           <div
@@ -373,6 +388,7 @@ export const WithdrawalStep3: React.FC = () => {
               display: "flex",
               alignItems: "center",
               gap: 6,
+              whiteSpace: "nowrap",
             }}
           >
             <span style={{ color: "var(--color-accent)", fontWeight: 700 }}>●</span>
@@ -506,11 +522,12 @@ export const WithdrawalStep3: React.FC = () => {
           background: "var(--color-surface)",
           borderRadius: "var(--radius-sm)",
           borderLeft: "3px solid var(--color-accent)",
-          display: "flex",
-          justifyContent: "space-between",
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
           alignItems: "center",
-          flexWrap: "wrap",
-          gap: "var(--space-2)",
+          gap: "var(--space-3)",
+          minHeight: "56px",
+          boxSizing: "border-box",
         }}
       >
         <span
@@ -519,12 +536,10 @@ export const WithdrawalStep3: React.FC = () => {
             fontSize: "var(--text-caption)",
             color: "var(--color-text)",
             fontWeight: 500,
-            height: "40px",
-            minHeight: "40px",
-            maxHeight: "40px",
-            display: "flex",
-            alignItems: "center",
             lineHeight: 1.4,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
             overflow: "hidden",
           }}
         >
@@ -539,6 +554,7 @@ export const WithdrawalStep3: React.FC = () => {
             fontFamily: "monospace",
             fontSize: "var(--text-caption)",
             color: "var(--color-faint)",
+            whiteSpace: "nowrap",
           }}
         >
           Client Self-Relay
