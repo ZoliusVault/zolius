@@ -9,6 +9,9 @@ import {
   formatAmount,
   LocalKeys,
   SOL_MINT,
+  AssetMetadataCache,
+  getPrivateTokenBalances,
+  getPrivateTransactions,
   syncWallet,
   Wallet,
   type Address,
@@ -26,8 +29,7 @@ const INDEXER_URL =
   process.env.NEXT_PUBLIC_SOLANA_INDEXER_URL || "https://d34xe1hqb2ibg2.cloudfront.net";
 const PROVER_URL =
   process.env.NEXT_PUBLIC_SOLANA_PROVER_URL || "https://dd73hh473h6ha.cloudfront.net";
-const RPC_URL =
-  process.env.NEXT_PUBLIC_DEVNET_RPC_URL || "https://api.devnet.solana.com";
+const RPC_URL = "/api/solana/rpc";
 
 type SprSession = {
   client: Awaited<ReturnType<typeof createSprClient>>;
@@ -45,6 +47,193 @@ export type SyncedSolNote = {
   spent: boolean;
   leafIndex: number;
 };
+
+export type PrivateAssetBalance = {
+  mint: string;
+  amount: bigint;
+  decimals: number;
+};
+
+export type PrivateHistoryEntry = {
+  signature: string;
+  slot: bigint;
+  kind: string;
+  direction: string;
+  mint: string;
+  amount: bigint;
+  decimals: number;
+};
+
+export type PrivatePortfolio = {
+  balances: PrivateAssetBalance[];
+  history: PrivateHistoryEntry[];
+};
+
+function parseTokenAmount(value: string, decimals: number): bigint {
+  const normalized = value.trim();
+  const fractionDigits = Math.min(Math.max(decimals, 0), 18);
+  if (!/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(normalized)) {
+    throw new Error("Enter a positive token amount using decimal notation.");
+  }
+  const [whole, fraction = ""] = normalized.split(".");
+  if (fraction.length > fractionDigits) {
+    throw new Error(`This token supports up to ${fractionDigits} decimal places.`);
+  }
+  return BigInt(whole) * 10n ** BigInt(fractionDigits) + BigInt(fraction.padEnd(fractionDigits, "0") || "0");
+}
+
+function formatTokenAmount(value: bigint, decimals: number): string {
+  const places = Math.min(Math.max(decimals, 0), 18);
+  const scale = 10n ** BigInt(places);
+  const fraction = (value % scale).toString().padStart(places, "0").replace(/0+$/, "");
+  return fraction ? `${value / scale}.${fraction}` : (value / scale).toString();
+}
+
+async function portfolioForSession(session: SprSession): Promise<PrivatePortfolio> {
+  const metadata = new AssetMetadataCache(session.client);
+  const balances = await Promise.all(
+    getPrivateTokenBalances(session.wallet).map(async (balance) => {
+      const details = await metadata.get(balance.mint);
+      return { mint: balance.mint, amount: balance.amount, decimals: details.decimals };
+    }),
+  );
+  const history = await Promise.all(
+    getPrivateTransactions(session.wallet).map(async (transaction) => {
+      const details = await metadata.get(transaction.asset);
+      return {
+        signature: String(transaction.id.signature),
+        slot: transaction.id.slot,
+        kind: transaction.kind,
+        direction: transaction.direction,
+        mint: transaction.asset,
+        amount: transaction.amount,
+        decimals: details.decimals,
+      };
+    }),
+  );
+  return { balances, history };
+}
+
+async function syncAndConfirmPrivateTransaction(
+  session: SprSession,
+  transaction: Parameters<typeof getBase64EncodedWireTransaction>[0],
+): Promise<{ signature: string; portfolio: PrivatePortfolio }> {
+  const signature = await sendWithWallet(session, transaction);
+  const slot = await session.client.confirmTransaction(signature as Signature);
+  await syncWallet({
+    client: session.client,
+    wallet: session.wallet,
+    keys: session.keys,
+    config: { requireSlot: slot },
+  });
+  await session.client.confirmPrivateTransaction(signature as Signature);
+  return { signature, portfolio: await portfolioForSession(session) };
+}
+
+export async function readPrivatePortfolio(stored: StoredWallet): Promise<PrivatePortfolio> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    return await portfolioForSession(session);
+  } finally {
+    session.keys.destroy();
+  }
+}
+
+export async function shieldPrivateAsset(
+  stored: StoredWallet,
+  mintValue: string,
+  amountText: string,
+  memo?: string,
+): Promise<{ signature: string; portfolio: PrivatePortfolio }> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    await ensureRegistered(session);
+    const mint = mintValue.trim() as Address;
+    const metadata = await new AssetMetadataCache(session.client).get(mint);
+    const amount = parseTokenAmount(amountText, metadata.decimals);
+    if (amount <= 0n) throw new Error("Amount must be greater than zero.");
+    const transaction = await buildDepositTransaction({
+      client: session.client,
+      feePayer: session.address as Address,
+      depositor: session.address as Address,
+      recipient: session.wallet.identity,
+      asset: mint,
+      amount,
+      ...(memo ? { memo: new TextEncoder().encode(memo) } : {}),
+    });
+    return await syncAndConfirmPrivateTransaction(session, transaction);
+  } finally {
+    session.keys.destroy();
+  }
+}
+
+export async function transferPrivateAsset(
+  stored: StoredWallet,
+  mintValue: string,
+  recipientValue: string,
+  amountText: string,
+): Promise<{ signature: string; portfolio: PrivatePortfolio }> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const mint = mintValue.trim() as Address;
+    const metadata = await new AssetMetadataCache(session.client).get(mint);
+    const amount = parseTokenAmount(amountText, metadata.decimals);
+    if (amount <= 0n) throw new Error("Amount must be greater than zero.");
+    if (session.wallet.balance(mint).amount < amount) {
+      throw new Error("Insufficient private balance for this asset.");
+    }
+    const recipient = new PublicKey(recipientValue.trim()).toBase58() as Address;
+    const transaction = await buildTransferTransaction({
+      client: session.client,
+      wallet: session.wallet,
+      keys: session.keys,
+      feePayer: session.address as Address,
+      recipient,
+      asset: mint,
+      amount,
+    });
+    return await syncAndConfirmPrivateTransaction(session, transaction);
+  } finally {
+    session.keys.destroy();
+  }
+}
+
+export async function withdrawPrivateAsset(
+  stored: StoredWallet,
+  mintValue: string,
+  recipientValue: string,
+  amountText: string,
+): Promise<{ signature: string; portfolio: PrivatePortfolio }> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const mint = mintValue.trim() as Address;
+    const metadata = await new AssetMetadataCache(session.client).get(mint);
+    const amount = parseTokenAmount(amountText, metadata.decimals);
+    if (amount <= 0n) throw new Error("Amount must be greater than zero.");
+    if (session.wallet.balance(mint).amount < amount) {
+      throw new Error("Insufficient private balance for this asset.");
+    }
+    const recipient = new PublicKey(recipientValue.trim()).toBase58() as Address;
+    const transaction = await buildWithdrawalTransaction({
+      client: session.client,
+      wallet: session.wallet,
+      keys: session.keys,
+      feePayer: session.address as Address,
+      recipient,
+      asset: mint,
+      amount,
+    });
+    return await syncAndConfirmPrivateTransaction(session, transaction);
+  } finally {
+    session.keys.destroy();
+  }
+}
+
+export { formatTokenAmount };
 
 function toHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -131,7 +320,6 @@ async function openSession(stored: StoredWallet): Promise<SprSession> {
 
   const client = await createSprClient({
     solanaRpcUrl: RPC_URL,
-    solanaRpcSubscriptionsUrl: process.env.NEXT_PUBLIC_SOLANA_WS_URL || undefined,
     indexerUrl: INDEXER_URL,
     proverUrl: PROVER_URL,
     proverTee: SignedTeePolicy.forNetwork("devnet"),

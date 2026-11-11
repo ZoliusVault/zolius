@@ -1,5 +1,4 @@
-export const SOLANA_DEVNET_RPC_URL =
-  process.env.NEXT_PUBLIC_DEVNET_RPC_URL || "https://api.devnet.solana.com";
+export const SOLANA_DEVNET_RPC_URL = "/api/solana/rpc";
 
 export const ZOLIUS_SOLANA_PROGRAMS = {
   lock:

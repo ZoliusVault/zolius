@@ -14,14 +14,14 @@ export default function QuantumPage() {
       id: "w1",
       title: "Encrypted Vault Backup",
       spec: "Hybrid X-Wing KEM (X25519 + ML-KEM-768) + XChaCha20-Poly1305",
-      status: "BUILDING",
-      badgeColor: "#B45309",
+      status: "LIVE IN APP",
+      badgeColor: "#047857",
       description:
-        "Planned hybrid encryption for viewing-key and backup material, designed to reduce harvest-now-decrypt-later exposure. The current Devnet app does not yet encrypt or store these backups.",
+        "Wallet-derived X-Wing key encapsulation and AES-256-GCM protect account history and metadata in a downloadable backup. Restore requires the same wallet signature on the new device.",
       details: [
-        "Explore a hybrid X25519 + ML-KEM-768 (X-Wing) design",
-        "Define encrypted backup and device restore flows",
-        "Test key lifecycle and recovery before shipping",
+        "Hybrid X25519 + ML-KEM-768 X-Wing KEM",
+        "Wallet-domain key derivation: ZOLIUS/vault/v1",
+        "Encrypted backup and same-wallet restore",
       ],
       tag: "Workstream 1",
     },
@@ -29,14 +29,14 @@ export default function QuantumPage() {
       id: "w2",
       title: "Selective Auditor Sharing",
       spec: "X-Wing Public Key Encapsulation with Ephemeral Time-Bound Delegation",
-      status: "BUILDING",
-      badgeColor: "#B45309",
+      status: "LIVE · FILE SHARE",
+      badgeColor: "#047857",
       description:
-        "Enables users to provide read-only decrypt capability to accountants, tax advisors, or compliance officers without exposing spending authority or master keys.",
+        "Create a read-only history file encrypted to a recipient's X-Wing public key with an enforced expiry. Downloaded files can be retained by recipients until expiry; deleting the sender's local record cannot recall a copy.",
       details: [
-        "Cryptographic proof of non-disclosure to third parties",
-        "Configurable expiration timestamp per shared viewing session",
-        "Selective transaction masking (e.g. share only specific tax year notes)",
+        "Wrong wallet cannot decrypt a recipient-bound share",
+        "Configurable expiry checked before decryption",
+        "Remove locally issued share records from this browser",
       ],
       tag: "Workstream 2",
     },
@@ -44,14 +44,14 @@ export default function QuantumPage() {
       id: "w3",
       title: "Encrypted Transaction Notes & Invoices",
       spec: "Off-chain AEAD payload bound to Solana Transaction Signature",
-      status: "BUILDING",
-      badgeColor: "#B45309",
+      status: "LIVE · LOCAL ENCRYPTED",
+      badgeColor: "#047857",
       description:
-        "Attach private memo notes, invoices, and accounting tags to confidential transfers without publishing metadata to Solana public state.",
+        "Transaction labels and invoice notes are encrypted with X-Wing-derived keys before they are saved in this browser, and are linked to the transaction signature.",
       details: [
-        "Indexed via Helius Privacy API webhook proxy",
-        "Decrypted client-side using account viewing key",
-        "Non-linkable to sender or receiver public keys",
+        "Encrypted before browser local storage",
+        "Decrypt only after the same wallet signature",
+        "Delete individual notes from this device",
       ],
       tag: "Workstream 3",
     },
@@ -210,7 +210,7 @@ export default function QuantumPage() {
               color: "var(--color-muted)",
             }}
           >
-            The Quantum Vault is a <strong>roadmap</strong>, not a currently shipped protection layer. The Devnet app uses the Privacy Rings protocol's Groth16 proofs; post-quantum viewing-key encryption and encrypted backup flows remain planned work.
+            Quantum Vault now encrypts backups, expiring history shares, and transaction notes in the browser with X-Wing and AES-256-GCM. Privacy Rings itself still uses Groth16 proofs; this off-chain vault does not make those on-chain proofs post-quantum.
           </p>
         </div>
       </div>
@@ -375,10 +375,10 @@ export default function QuantumPage() {
       >
         <div>
           <h3 style={{ margin: "0 0 6px 0", fontSize: "18px", fontWeight: 700, color: "var(--color-text)" }}>
-            Explore private SOL on Devnet while Quantum Vault is being built.
+            Open Quantum Vault and manage encrypted access.
           </h3>
           <p style={{ margin: 0, fontSize: "13px", color: "var(--color-muted)" }}>
-            Current transfers use Solana Privacy Rings. Post-quantum viewing-key protection remains on the roadmap.
+            The wallet-derived vault key protects backup, sharing, and note payloads. Privacy Ring transaction activity is shown separately in the app as Devnet activity.
           </p>
         </div>
         <Link

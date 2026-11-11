@@ -19,16 +19,16 @@ const faqItems: FaqItem[] = [
     a: "Zolius Vault is an independent project built on the open Solana Privacy Rings protocol and uses the Helius Privacy API for RPC, indexer, and prover infrastructure. Zolius Vault is not affiliated with or endorsed by Helius.",
   },
   {
-    q: "Which assets and network does this app support?",
-    a: "Zolius is built for Solana, with confidential SOL flows at its core and an expanding vision across digital assets and private finance.",
+    q: "How does the Quantum Vault protect viewing keys?",
+    a: "While on-chain transactions verify Groth16 zk-SNARKs, Quantum Vault is an off-chain layer that secures your viewing keys and transaction notes with hybrid post-quantum cryptography (X25519 + ML-KEM-768 / X-Wing), protecting against future 'harvest now, decrypt later' threats.",
   },
   {
-    q: "Can I send a private payment to any address?",
-    a: "The recipient needs a Privacy Ring registration to receive a private transfer. Withdraw to a public Solana address if it is not registered.",
+    q: "Can anyone freeze or censor my confidential funds?",
+    a: "Zolius Vault is completely self-custodial: every confidential transfer and withdrawal requires your wallet's cryptographic signature. Withdrawals cannot be frozen or stopped by any intermediary.",
   },
   {
-    q: "What is the Quantum Vault vision?",
-    a: "Quantum Vault is Zolius's post-quantum direction for viewing-key protection, combining X25519 with ML-KEM-768 (X-Wing) to address harvest-now-decrypt-later threats. The cryptographic design is described in the Quantum Vault roadmap.",
+    q: "I have funds in the legacy Veil pool. How do I migrate?",
+    a: "Veil pool deposits on the legacy chain have been paused, but withdrawals remain open permanently with no expiration. Visit our /migrate portal to execute a zero-custody withdrawal and move assets to Solana Zolius Vault.",
   },
 ];
 

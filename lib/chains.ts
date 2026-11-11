@@ -38,7 +38,6 @@ export const solanaDevnet = defineChain({
   rpcUrls: {
     default: {
       http: [
-        process.env.NEXT_PUBLIC_DEVNET_RPC_URL ||
         "https://api.devnet.solana.com",
       ],
     },

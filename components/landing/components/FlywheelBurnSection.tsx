@@ -1,11 +1,19 @@
 "use client";
 
-import React from "react";
-import { Shield, KeyRound, Zap } from "lucide-react";
+import React, { useState } from "react";
+import { Shield, KeyRound, Zap, Check, Copy } from "lucide-react";
 import { SectionHeader } from "./SectionHeader";
 import { RevealBox } from "./RevealBox";
 
 export const FlywheelBurnSection: React.FC = () => {
+  const [copiedKey, setCopiedKey] = useState(false);
+
+  const copySampleKey = () => {
+    navigator.clipboard.writeText("xwing_pub_7f8a91bc023d84ee49102847a98b71d939103e2182049182390123");
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2000);
+  };
+
   return (
     <section id="flywheel" style={{ padding: "var(--section-y) var(--page-gutter)" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-8)" }}>

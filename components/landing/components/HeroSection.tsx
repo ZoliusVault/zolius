@@ -120,7 +120,7 @@ export const HeroSection: React.FC = () => {
               overflowWrap: "break-word",
             }}
           >
-            Shield SOL, send confidential payments, and withdraw on Solana through the default Privacy Ring.
+            Self-custodial confidential transfers built on Solana Privacy Rings, protected by hybrid ML-KEM-768 quantum vaults.
           </h1>
 
           <div
@@ -132,7 +132,7 @@ export const HeroSection: React.FC = () => {
               letterSpacing: "0.04em",
             }}
           >
-            SOL · USDC · SPL / Token-2022. Quantum Vault: hybrid post-quantum protection for viewing keys.
+            SOL · USDC · SPL / Token-2022. Viewing keys encrypted with X-Wing.
           </div>
 
           <div
@@ -250,7 +250,7 @@ export const HeroSection: React.FC = () => {
               />
             </div>
 
-            {/* Right: protocol and roadmap context */}
+            {/* Right: Privacy Rings Audited By (Solid Black Monochrome) */}
             <div
               style={{
                 display: "flex",
@@ -280,14 +280,85 @@ export const HeroSection: React.FC = () => {
                   flexWrap: "nowrap",
                 }}
               >
-                <img className="lp-logo" src="/assets/logo/certora.png" alt="Certora" style={{ height: "calc(1.3 * clamp(20px, 2vw, 30px))", width: "auto", display: "block", opacity: 0.85, flexShrink: 0 }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 8, opacity: 0.85, flexShrink: 0 }}>
-                  <img src="/assets/logo/ottersec.png" alt="OtterSec" style={{ height: "calc(1.2 * clamp(20px, 2vw, 30px))", width: "auto", display: "block" }} />
-                  <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", color: "#000000", fontFamily: "var(--font-headline, sans-serif)", lineHeight: 1 }}>OtterSec</span>
+                {/* Certora (Black) */}
+                <img
+                  className="lp-logo"
+                  src="/assets/logo/certora.png"
+                  alt="Certora"
+                  style={{
+                    height: "calc(1.3 * clamp(20px, 2vw, 30px))",
+                    width: "auto",
+                    display: "block",
+                    opacity: 0.85,
+                    flexShrink: 0,
+                  }}
+                />
+
+                {/* OtterSec (Black) */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    opacity: 0.85,
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src="/assets/logo/ottersec.png"
+                    alt="OtterSec"
+                    style={{
+                      height: "calc(1.2 * clamp(20px, 2vw, 30px))",
+                      width: "auto",
+                      display: "block",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 700,
+                      letterSpacing: "-0.01em",
+                      color: "#000000",
+                      fontFamily: "var(--font-headline, sans-serif)",
+                      lineHeight: 1,
+                    }}
+                  >
+                    OtterSec
+                  </span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, opacity: 0.85, flexShrink: 0 }}>
-                  <img className="lp-logo" src="/assets/logo/zksecurity.svg" alt="zkSecurity" style={{ height: "calc(1.25 * clamp(20px, 2vw, 30px))", width: "auto", display: "block" }} />
-                  <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: "-0.01em", color: "#000000", fontFamily: "var(--font-headline, sans-serif)", lineHeight: 1 }}>zkSecurity</span>
+
+                {/* zkSecurity (Black) */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    opacity: 0.85,
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    className="lp-logo"
+                    src="/assets/logo/zksecurity.svg"
+                    alt="zkSecurity"
+                    style={{
+                      height: "calc(1.25 * clamp(20px, 2vw, 30px))",
+                      width: "auto",
+                      display: "block",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      letterSpacing: "-0.01em",
+                      color: "#000000",
+                      fontFamily: "var(--font-headline, sans-serif)",
+                      lineHeight: 1,
+                    }}
+                  >
+                    zkSecurity
+                  </span>
                 </div>
               </div>
             </div>
