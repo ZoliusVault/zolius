@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Zolius Vault — Link Banner Preview (1200x630)</title>
+  <style>
+    @font-face {
+      font-family: "GT Alpina Typewriter";
+      src: url("/assets/fonts/GT-Alpina-Typewriter-Regular-Trial.otf") format("opentype");
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "GT Alpina Typewriter";
+      src: url("/assets/fonts/GT-Alpina-Typewriter-Medium-Trial.otf") format("opentype");
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "GT Alpina Typewriter";
+      src: url("/assets/fonts/GT-Alpina-Typewriter-Bold-Trial.otf") format("opentype");
+      font-weight: 700;
+      font-style: normal;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      background-color: #080808;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Exact 1200x630 OpenGraph & Twitter Large Card Container */
+    .banner-canvas {
+      width: 1200px;
+      height: 630px;
+      position: relative;
+      overflow: hidden;
+      background-color: #080808;
+      background-image: 
+        radial-gradient(circle at 80% 50%, rgba(255, 140, 0, 0.14) 0%, transparent 45%),
+        linear-gradient(90deg, #080808 0%, rgba(8, 8, 8, 0.98) 42%, rgba(8, 8, 8, 0.76) 65%, rgba(8, 8, 8, 0.15) 100%),
+        url('/assets/banners/zolius_quantum_ring_raw.jpg');
+      background-size: auto, auto, cover;
+      background-position: center, center, right center;
+      background-repeat: no-repeat;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 56px 64px 44px 64px;
+    }
+
+    /* Ambient Subtle Grid Overlay */
+    .banner-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Cryptographic Ring Accent Line */
+    .quantum-accent {
+      position: absolute;
+      right: 180px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 140, 0, 0.25);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Corner Editorial Marks */
+    .crop-mark {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-color: rgba(255, 140, 0, 0.45);
+      pointer-events: none;
+      z-index: 3;
+    }
+    .crop-tl { top: 24px; left: 24px; border-top: 1.5px solid; border-left: 1.5px solid; }
+    .crop-tr { top: 24px; right: 24px; border-top: 1.5px solid; border-right: 1.5px solid; }
+    .crop-bl { bottom: 24px; left: 24px; border-bottom: 1.5px solid; border-left: 1.5px solid; }
+    .crop-br { bottom: 24px; right: 24px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+
+    /* Content Layer */
+    .banner-content {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+
+    /* Top Row */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 0 12px rgba(255, 140, 0, 0.25));
+    }
+
+    .brand-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-name {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", monospace;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-badge {
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(255, 140, 0, 0.15);
+      border: 1px solid rgba(255, 140, 0, 0.45);
+      color: #FF8C00;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .network-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(14, 14, 14, 0.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: #D6D6D6;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .network-pill img {
+      height: 14px;
+      width: auto;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #10B981;
+      box-shadow: 0 0 10px #10B981;
+    }
+
+    /* Center Section */
+    .hero-section {
+      max-width: 670px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #FF8C00;
+      margin-bottom: 16px;
+    }
+
+    .kicker-line {
+      width: 24px;
+      height: 1.5px;
+      background: #FF8C00;
+    }
+
+    .headline {
+      font-family: "GT Alpina Typewriter", Georgia, "Times New Roman", serif;
+      font-size: 50px;
+      line-height: 1.06;
+      font-weight: 400;
+      color: #F8F8F6;
+      letter-spacing: -0.025em;
+      margin-bottom: 18px;
+      text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .headline em {
+      font-style: italic;
+      color: #FFFFFF;
+      font-weight: 500;
+    }
+
+    .subtext {
+      font-size: 16.5px;
+      line-height: 1.55;
+      color: #9C9C9C;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 610px;
+      margin-bottom: 22px;
+    }
+
+    /* Feature Pillars */
+    .feature-pillars {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pillar-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(18, 18, 18, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: #EDEDED;
+    }
+
+    .pillar-tag .code {
+      color: #FF8C00;
+      font-weight: 600;
+    }
+
+    /* Bottom Anchor Row */
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .trust-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .trust-label {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #707070;
+    }
+
+    .trust-logos {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+    }
+
+    .trust-logos img {
+      height: 18px;
+      width: auto;
+      opacity: 0.9;
+    }
+
+    .url-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #FFFFFF;
+      background: rgba(255, 140, 0, 0.1);
+      border: 1px solid rgba(255, 140, 0, 0.4);
+      padding: 9px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(255, 140, 0, 0.12);
+    }
+
+    .url-chip .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #FF8C00;
+      box-shadow: 0 0 10px #FF8C00;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="banner-canvas" id="banner">
+    <div class="banner-grid"></div>
+    <div class="quantum-accent"></div>
+    <div class="crop-mark crop-tl"></div>
+    <div class="crop-mark crop-tr"></div>
+    <div class="crop-mark crop-bl"></div>
+    <div class="crop-mark crop-br"></div>
+
+    <div class="banner-content">
+      <!-- Top Row -->
+      <div class="top-bar">
+        <div class="brand-group">
+          <div class="brand-icon">
+            <img src="/veil-logo-white.svg" alt="Zolius Vault Mark">
+          </div>
+          <div class="brand-name">
+            Zolius
+            <span class="brand-badge">Vault</span>
+          </div>
+        </div>
+
+        <div class="network-pill">
+          <img src="/assets/logo/solana-white.svg" alt="Solana">
+          <span>MAINNET-BETA</span>
+          <span class="live-dot"></span>
+          <span>PRIVACY RINGS</span>
+        </div>
+      </div>
+
+      <!-- Center Hero Section -->
+      <div class="hero-section">
+        <div class="kicker">
+          <span class="kicker-line"></span>
+          <span>Confidential Solana Protocol</span>
+        </div>
+        <h1 class="headline">
+          Self-Custodial <em>Confidential</em><br>Transfers on Solana.
+        </h1>
+        <p class="subtext">
+          Zero-Knowledge Groth16 proofs break on-chain transaction graph links. Cryptographically shielded by post-quantum ML-KEM-768 lattice vaults with client-side verification.
+        </p>
+        <div class="feature-pillars">
+          <div class="pillar-tag">
+            <span class="code">[ZK-SNARK]</span> Groth16 Proofs
+          </div>
+          <div class="pillar-tag">
+            <span class="code">[LATTICE]</span> ML-KEM-768 Vault
+          </div>
+          <div class="pillar-tag">
+            <span class="code">[SPL]</span> Token-2022 Ready
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="bottom-bar">
+        <div class="trust-block">
+          <div class="trust-label">Security Audits &amp; Formal Verification</div>
+          <div class="trust-logos">
+            <img src="/assets/logo/certora-white.png" alt="Certora" style="height: 17px;">
+            <img src="/assets/logo/ottersec-white.png" alt="OtterSec" style="height: 19px;">
+            <img src="/assets/logo/zksecurity-white.svg" alt="zkSecurity" style="height: 18px;">
+          </div>
+        </div>
+
+        <div class="url-chip">
+          <span class="dot"></span>
+          <span>zolius.vault</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
