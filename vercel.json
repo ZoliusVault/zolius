@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "veilpools.tech" }],
+      "destination": "https://www.veilpools.tech/$1",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/shield-artifacts/(.*)",
+      "headers": [{ "key": "Content-Type", "value": "application/octet-stream" }]
+    }
+  ]
+}

@@ -1,0 +1,452 @@
+import { describe, it, expect } from "vitest";
+import { parseEther } from "viem";
+
+// TDD RED: lib/zk-router does not exist yet. These pins cover the brief:
+// quote-then-execute ordering, minSwapOut derivation, fail-closed mapping.
+
+const ZK_ROUTER = "0x9ccf3800cb6aa5754ec9ec5815e06f432df10635";
+const ENTRYPOINT = "0xb68c3d25e5e9902363e8e10d5c0a471e65be8152";
+const ACCOUNT = "0x1111111111111111111111111111111111111111" as const;
+const ETH_ZERO = "0x0000000000000000000000000000000000000000" as const;
+const VEIL = "0x019086f63407fadf0ccb89516e465baef5031aa9" as const;
+
+const WITHDRAWAL = {
+  processooor: ENTRYPOINT,
+  data: "0x1234" as `0x${string}`,
+} as const;
+
+const PROOF = {
+  pA: [1n, 2n] as [bigint, bigint],
+  pB: [
+    [3n, 4n],
+    [5n, 6n],
+  ] as [[bigint, bigint], [bigint, bigint]],
+  pC: [7n, 8n] as [bigint, bigint],
+  pubSignals: [1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n] as [
+    bigint,
+    bigint,
+    bigint,
+    bigint,
+    bigint,
+    bigint,
+    bigint,
+    bigint
+  ],
+} as const;
+
+function baseInput(over: Record<string, unknown> = {}) {
+  return {
+    withdrawal: WITHDRAWAL,
+    proof: PROOF,
+    scope: 123n,
+    withdrawAsset: ETH_ZERO,
+    depositAsset: VEIL,
+    depositValue: parseEther("0.5"),
+    precommitment: 999n,
+    zeroForOne: true,
+    quotedSwapOut: parseEther("1.35"),
+    slippagePercent: 0.5,
+    ...over,
+  };
+}
+
+describe("zk router flow wiring (full-ZK UI)", () => {
+  it("pins the live router + fresh entrypoint + shared v4 pool key", async () => {
+    const mod = await import("../lib/zk-router");
+    expect(mod.TESTNET_ZK_ROUTER_ADDRESS.toLowerCase()).toBe(ZK_ROUTER);
+    expect(mod.TESTNET_ZK_ROUTER_ENTRYPOINT.toLowerCase()).toBe(ENTRYPOINT);
+    const { TESTNET_ROUTER_POOL_KEY } = await import("../lib/router-swap");
+    expect(mod.ZK_POOL_KEY.currency0).toBe(TESTNET_ROUTER_POOL_KEY.currency0);
+    expect(mod.ZK_POOL_KEY.currency1).toBe(TESTNET_ROUTER_POOL_KEY.currency1);
+    expect(mod.ZK_POOL_KEY.fee).toBe(TESTNET_ROUTER_POOL_KEY.fee);
+    expect(mod.ZK_POOL_KEY.tickSpacing).toBe(TESTNET_ROUTER_POOL_KEY.tickSpacing);
+  });
+
+  it("builds the swap leg per direction with the proven price bounds", async () => {
+    const { buildZkSwapLeg } = await import("../lib/zk-router");
+    const { TESTNET_ROUTER_HOOK_DATA } = await import("../lib/router-swap");
+    const ethIn = buildZkSwapLeg({ zeroForOne: true });
+    expect(ethIn.zeroForOne).toBe(true);
+    expect(ethIn.hookData).toBe(TESTNET_ROUTER_HOOK_DATA);
+    const veilIn = buildZkSwapLeg({ zeroForOne: false });
+    expect(veilIn.zeroForOne).toBe(false);
+    expect(veilIn.sqrtPriceLimitX96).not.toBe(ethIn.sqrtPriceLimitX96);
+  });
+
+  it("derives minSwapOut from live quote x slippage (never hardcoded)", async () => {
+    const { deriveZkMinSwapOut } = await import("../lib/zk-router");
+    const { calculateSlippageBound } = await import("../lib/router-client");
+    const quoted = parseEther("1.35");
+    expect(deriveZkMinSwapOut(quoted, 0.5)).toBe(
+      calculateSlippageBound(quoted, 0.5)
+    );
+    expect(deriveZkMinSwapOut(quoted, 0)).toBe(quoted);
+    expect(() => deriveZkMinSwapOut(0n, 0.5)).toThrow();
+    expect(() => deriveZkMinSwapOut(quoted, -1)).toThrow();
+    expect(() => deriveZkMinSwapOut(quoted, 100)).toThrow();
+  });
+
+  it("builds full-flow args with recipient forced to the router", async () => {
+    const { buildFullZkFlowArgs } = await import("../lib/zk-router");
+    const args = buildFullZkFlowArgs(baseInput());
+    expect(args.recipient.toLowerCase()).toBe(ZK_ROUTER);
+    expect(args.minSwapOut).toBe(
+      (parseEther("1.35") * 9950n) / 10000n
+    );
+    expect(() =>
+      buildFullZkFlowArgs(baseInput({ depositValue: 0n }))
+    ).toThrow();
+    expect(() =>
+      buildFullZkFlowArgs(baseInput({ precommitment: 0n }))
+    ).toThrow();
+    expect(() => buildFullZkFlowArgs(baseInput({ quotedSwapOut: 0n }))).toThrow();
+    // Swap-leg asset binding: ETH->VEIL leg cannot carry a mismatched asset.
+    expect(() =>
+      buildFullZkFlowArgs(baseInput({ depositAsset: ETH_ZERO }))
+    ).toThrow(/InvalidSwapLeg|swap leg/i);
+  });
+
+  it("quotes first via zero-min simulation, then executes with derived min (ordering)", async () => {
+    const mod = await import("../lib/zk-router");
+    // Hidden live swap output: 1.35 VEIL. Succeeds iff minSwapOut <= hidden.
+    const hidden = parseEther("1.35");
+    const seenMins: bigint[] = [];
+    let writes = 0;
+    const mockClient = {
+      async simulateContract(req: { args: readonly unknown[] }) {
+        const callArgs = req.args as readonly unknown[];
+        const min = callArgs[callArgs.length - 1] as bigint;
+        seenMins.push(min);
+        if (min > hidden) {
+          const err = new Error("reverted: SlippageExceeded") as Error & {
+            errorName: string;
+          };
+          err.errorName = "SlippageExceeded";
+          throw err;
+        }
+        return { result: 424242n };
+      },
+      // Send-capable mock: any write/send attempt is recorded so the
+      // lib-never-sends assertion below is falsifiable (not trivially true).
+      async writeContract() {
+        writes += 1;
+        throw new Error("lib must never send: writeContract called");
+      },
+      async sendTransaction() {
+        writes += 1;
+        throw new Error("lib must never send: sendTransaction called");
+      },
+    };
+    // The mock must expose send paths, otherwise writes === 0 proves nothing.
+    expect("writeContract" in mockClient).toBe(true);
+    expect("sendTransaction" in mockClient).toBe(true);
+    const base = {
+      withdrawal: WITHDRAWAL,
+      proof: PROOF,
+      scope: 123n,
+      withdrawAsset: ETH_ZERO,
+      depositAsset: VEIL,
+      depositValue: parseEther("0.5"),
+      precommitment: 999n,
+      zeroForOne: true,
+    };
+    const out = await mod.quoteAndBuildFullZkFlow(mockClient as never, {
+      account: ACCOUNT,
+      base,
+      slippagePercent: 0.5,
+    });
+    // First simulation is the zero-floor preflight (no tx).
+    expect(seenMins[0]).toBe(0n);
+    // Probing stays read-only: lib never sends.
+    expect(writes).toBe(0);
+    // Derived min is live floor x slippage and brackets the hidden output.
+    expect(out.minSwapOut).toBeLessThanOrEqual(hidden);
+    expect(out.minSwapOut).toBe(
+      (out.quotedSwapOut * 9950n) / 10000n
+    );
+    // Final pre-send simulation carries the derived min last.
+    expect(seenMins[seenMins.length - 1]).toBe(out.minSwapOut);
+    expect(seenMins.length).toBeGreaterThan(2);
+    void writes;
+  });
+
+  it("fails closed when the zero-min preflight reverts (nothing sent)", async () => {
+    const mod = await import("../lib/zk-router");
+    const mockClient = {
+      async simulateContract() {
+        const err = new Error("reverted: AtomicityViolation") as Error & {
+          errorName: string;
+        };
+        err.errorName = "AtomicityViolation";
+        throw err;
+      },
+    };
+    await expect(
+      mod.quoteAndBuildFullZkFlow(mockClient as never, {
+        account: ACCOUNT,
+        base: {
+          withdrawal: WITHDRAWAL,
+          proof: PROOF,
+          scope: 123n,
+          withdrawAsset: ETH_ZERO,
+          depositAsset: VEIL,
+          depositValue: parseEther("0.5"),
+          precommitment: 999n,
+          zeroForOne: true,
+        },
+        slippagePercent: 0.5,
+      })
+    ).rejects.toThrow(/AtomicityViolation/);
+  });
+
+  it("maps every router revert to a short human message (never raw dumps)", async () => {
+    const { mapZkRouterError } = await import("../lib/zk-router");
+    expect(mapZkRouterError(new Error("User rejected the request"))).toMatch(
+      /cancelled/i
+    );
+    expect(
+      mapZkRouterError({ errorName: "SlippageExceeded" }, 0.5)
+    ).toMatch(/SlippageExceeded/);
+    expect(mapZkRouterError({ errorName: "AtomicityViolation" })).toMatch(
+      /AtomicityViolation/
+    );
+    expect(mapZkRouterError({ errorName: "RecipientMismatch" })).toMatch(
+      /relay recipient must equal the ZK router/i
+    );
+    expect(mapZkRouterError({ errorName: "InvalidSwapLeg" })).toMatch(
+      /InvalidSwapLeg/
+    );
+    expect(
+      mapZkRouterError(new Error("reverted: InsufficientOutputForDenomination"))
+    ).toMatch(/InsufficientOutputForDenomination/);
+    expect(
+      mapZkRouterError({ cause: { errorName: "NonZeroBalanceInvariantFailed" } })
+    ).toMatch(/NonZeroBalanceInvariantFailed/);
+    expect(mapZkRouterError({ errorName: "IncorrectASPRoot" })).toMatch(
+      /moved onchain while proving|re-prove|fresh root/i
+    );
+    const huge = mapZkRouterError(new Error(`boom ${"0xab".repeat(500)}`));
+    expect(huge.length).toBeLessThanOrEqual(321);
+    expect(huge).not.toMatch(/0xababab/);
+  });
+
+  it("finds FullZkFlowExecuted only for our commitment", async () => {
+    const { findFullZkFlowExecuted } = await import("../lib/zk-router");
+    const commitment = 424242n;
+    expect(findFullZkFlowExecuted([], commitment)).toBeNull();
+    expect(
+      findFullZkFlowExecuted(
+        [{ data: "0x" as `0x${string}`, topics: ["0xdead" as `0x${string}`] }],
+        commitment
+      )
+    ).toBeNull();
+  });
+
+  it("gates execution until a fresh quote exists", async () => {
+    const { isZkExecuteDisabled } = await import("../lib/zk-router");
+    const ready = {
+      isExecuting: false,
+      connected: true,
+      noteValid: true,
+      isQuoting: false,
+      hasQuote: true,
+    };
+    expect(isZkExecuteDisabled(ready)).toBe(false);
+    expect(isZkExecuteDisabled({ ...ready, isQuoting: true })).toBe(true);
+    expect(isZkExecuteDisabled({ ...ready, hasQuote: false })).toBe(true);
+    expect(isZkExecuteDisabled({ ...ready, isExecuting: true })).toBe(true);
+    expect(isZkExecuteDisabled({ ...ready, noteValid: false })).toBe(true);
+    expect(isZkExecuteDisabled({ ...ready, connected: false })).toBe(false);
+  });
+
+  it("wires executeFullZkFlow into the trade page with prover steps + revalidate", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const src = readFileSync(join(process.cwd(), "app/trade/page.tsx"), "utf8");
+    expect(src).toContain("executeFullZkFlow");
+    expect(src).toContain("VEIL_ZK_ROUTER_ABI");
+    expect(src).toContain("TESTNET_ZK_ROUTER_ADDRESS");
+    // Prover-modal flow mirrors 0xbow: prove -> relay-in-tx -> swap -> deposit -> verify.
+    expect(src).toMatch(/relay-in-tx/i);
+    // Wallet drift guard before the send.
+    const zkSection = src.slice(src.indexOf("executeFullZkFlow") - 4000);
+    expect(zkSection).toContain("revalidateWallet");
+  });
+
+  it("rejects a stale entrypoint processooor on every builder path (no dead builders)", async () => {
+    const mod = await import("../lib/zk-router");
+    const badBase = {
+      withdrawal: {
+        processooor: "0x000000000000000000000000000000000000dead" as `0x${string}`,
+        data: "0x1234" as `0x${string}`,
+      },
+      proof: PROOF,
+      scope: 123n,
+      withdrawAsset: ETH_ZERO,
+      depositAsset: VEIL,
+      depositValue: parseEther("0.5"),
+      precommitment: 999n,
+      zeroForOne: true,
+    };
+    // Pure builder must fail closed on the entrypoint check.
+    expect(() =>
+      mod.buildFullZkFlowArgs({ ...badBase, quotedSwapOut: parseEther("1.35"), slippagePercent: 0.5 })
+    ).toThrow(/processooor|entrypoint/i);
+    // Quote path (resolveBase) must enforce the same check, otherwise the
+    // shipped UI quote would skip validation the tests pin.
+    const hidden = parseEther("1.35");
+    const mockClient = {
+      async simulateContract() {
+        return { result: 1n };
+      },
+    };
+    await expect(
+      mod.quoteAndBuildFullZkFlow(mockClient as never, {
+        account: ACCOUNT,
+        base: badBase,
+        slippagePercent: 0.5,
+      })
+    ).rejects.toThrow(/processooor|entrypoint/i);
+    void hidden;
+  });
+
+  it("pins the shipped UI path: builders + pre-send sim + drift guard direction", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const src = readFileSync(join(process.cwd(), "app/trade/page.tsx"), "utf8");
+    // I2: page must route through the ordering-tested builders (no dead builders).
+    expect(src).toContain("quoteAndBuildFullZkFlow");
+    expect(src).toContain("buildFullZkFlowArgs");
+    expect(src).toContain("simulateFullZkFlow");
+    // I1: pre-send simulation runs AFTER revalidateWallet and BEFORE writeContract.
+    const execIdx = src.indexOf("handleZkFullFlow");
+    const execSrc = src.slice(execIdx);
+    const revalidateIdx = execSrc.indexOf("revalidateWallet");
+    const simIdx = execSrc.indexOf("simulateFullZkFlow");
+    const sendIdx = execSrc.indexOf("writeContract");
+    expect(revalidateIdx).toBeGreaterThan(-1);
+    expect(simIdx).toBeGreaterThan(revalidateIdx);
+    expect(sendIdx).toBeGreaterThan(simIdx);
+    // C1 (fixed-denomination update): the quoted bundle must carry the pool
+    // fixed 0.001 note on both legs (minimum-vs-denomination confusion
+    // caused InvalidDenomination on every flow). Neither direction may be
+    // permanently blocked and the stale minimum-comparison must be gone.
+    expect(src).toContain("fixedDepositValue");
+    expect(src).toMatch(/depositValue !== \(zkIsEthIn \? TESTNET_BOW_V3_VEIL_DENOMINATION : TESTNET_BOW_V3_ETH_DENOMINATION\)/);
+    expect(src).not.toContain("zkIsEthIn && veilMinimum !==");
+    // M1: in-flight guard precedes the prover modal in both ZK handlers.
+    const quoteIdx = src.indexOf("handleZkQuote");
+    const quoteSrc = src.slice(quoteIdx, quoteIdx + 6000);
+    expect(quoteSrc.indexOf("txInFlight.current > 0")).toBeLessThan(
+      quoteSrc.indexOf("setIsProverOpen(true)")
+    );
+    expect(execSrc.indexOf("txInFlight.current > 0")).toBeLessThan(
+      execSrc.indexOf("setIsProverOpen(true)")
+    );
+    // M3: new ZK comments use paused-route wording, not legacy.
+    const libSrc = readFileSync(join(process.cwd(), "lib/zk-router.ts"), "utf8");
+    expect(libSrc).not.toMatch(/legacy router module/);
+    expect(src).not.toMatch(/legacy stays dead/);
+  });
+
+  describe("suite-aware swap legs (mainnet audit)", () => {
+    const MAINNET_SUITE = {
+      chainId: 4663,
+      router: "0x0fb48c9552154ea028cbd812430e1ea3465a9b4c",
+      multi: "0x0fb48c9552154ea028cbd812430e1ea3465a9b4c",
+      entrypoint: "0x96cb8b1836d341a6f5f1f54428bd6696c8b950b1",
+      ethPool: "0x10c17b7538e13c63b890fea52708846e88bb1932",
+      veilPool: "0xdb9f182670da2cc6c5ddd432ec98a45e4f2290d100000000000000000000000000000000000000",
+      veilToken: "0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a",
+    } as const;
+
+    it("binds currency1 to the suite VEIL token (default stays testnet)", async () => {
+      const { buildZkSwapLeg, TESTNET_ZK_SUITE } = await import("../lib/zk-router");
+      const def = buildZkSwapLeg({ zeroForOne: true });
+      expect(def.key.currency1.toLowerCase()).toBe(TESTNET_ZK_SUITE.veilToken.toLowerCase());
+      const main = buildZkSwapLeg({ zeroForOne: true, suite: { ...TESTNET_ZK_SUITE, ...MAINNET_SUITE } });
+      expect(main.key.currency1.toLowerCase()).toBe("0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a");
+      expect(main.key.currency0).toBe(def.key.currency0);
+      expect(main.key.fee).toBe(def.key.fee);
+      expect(main.key.tickSpacing).toBe(def.key.tickSpacing);
+      expect(main.key.hooks).toBe(def.key.hooks);
+    });
+
+    it("builds full-flow args for mainnet assets without InvalidSwapLeg", async () => {
+      const mod = await import("../lib/zk-router");
+      const suite = { ...(mod.TESTNET_ZK_SUITE as object), ...MAINNET_SUITE } as never;
+      const args = mod.buildFullZkFlowArgs({
+        withdrawal: { processooor: (suite as { entrypoint: `0x${string}` }).entrypoint, data: "0x1234" as `0x${string}` },
+        proof: PROOF,
+        scope: 123n,
+        withdrawAsset: ETH_ZERO,
+        depositAsset: "0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a" as `0x${string}`,
+        depositValue: parseEther("0.001"),
+        precommitment: 999n,
+        zeroForOne: true,
+        quotedSwapOut: parseEther("0.9"),
+        slippagePercent: 0.5,
+        suite,
+        recipient: (suite as { router: `0x${string}` }).router,
+      });
+      expect(args.swapLeg.key.currency1.toLowerCase()).toBe("0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a");
+    });
+
+    it("builds distinct pool ids per suite VEIL token", async () => {
+      const { buildZkPoolId, TESTNET_ZK_SUITE } = await import("../lib/zk-router");
+      const testId = buildZkPoolId();
+      const sameDefault = buildZkPoolId(TESTNET_ZK_SUITE);
+      expect(testId).toBe(sameDefault);
+      expect(testId).toMatch(/^0x[0-9a-f]{64}$/);
+      const mainId = buildZkPoolId({ ...TESTNET_ZK_SUITE, ...MAINNET_SUITE });
+      expect(mainId).toMatch(/^0x[0-9a-f]{64}$/);
+      expect(mainId).not.toBe(testId);
+    });
+
+    it("builds multi-note args for mainnet assets without InvalidSwapLeg", async () => {
+      const mod = await import("../lib/zk-router");
+      const suite = { ...(mod.TESTNET_ZK_SUITE as object), ...MAINNET_SUITE } as never;
+      const ep = (suite as { entrypoint: `0x${string}` }).entrypoint;
+      const wd = {
+        processooor: ep,
+        data: "0x1234" as `0x${string}`,
+      };
+      const args = mod.buildMultiFullZkFlowArgs({
+        withdrawals: [wd, wd],
+        proofs: [PROOF, PROOF],
+        scopes: [123n, 123n],
+        withdrawAsset: ETH_ZERO,
+        depositAsset: "0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a" as `0x${string}`,
+        depositValue: parseEther("0.001"),
+        precommitment: 999n,
+        zeroForOne: true,
+        quotedSwapOut: parseEther("1.8"),
+        slippagePercent: 0.5,
+        suite,
+        recipient: (suite as { multi: `0x${string}` }).multi,
+      });
+      expect(args.swapLeg.key.currency1.toLowerCase()).toBe("0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a");
+    });
+
+    it("builds direct-payout args for mainnet assets without InvalidSwapLeg", async () => {
+      const mod = await import("../lib/zk-router");
+      const suite = { ...(mod.TESTNET_ZK_SUITE as object), ...MAINNET_SUITE } as never;
+      const ep = (suite as { entrypoint: `0x${string}` }).entrypoint;
+      const args = mod.buildDirectFullZkFlowArgs({
+        withdrawal: { processooor: ep, data: "0x1234" as `0x${string}` },
+        proof: PROOF,
+        scope: 123n,
+        withdrawAsset: "0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a" as `0x${string}`,
+        outputRecipient: ACCOUNT,
+        zeroForOne: false,
+        quotedSwapOut: parseEther("0.000001"),
+        slippagePercent: 0.5,
+        suite,
+        recipient: (suite as { router: `0x${string}` }).router,
+      });
+      expect(args.swapLeg.zeroForOne).toBe(false);
+      expect(args.swapLeg.key.currency1.toLowerCase()).toBe("0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a");
+      expect(args.outputAsset.toLowerCase()).toBe("0x0000000000000000000000000000000000000000");
+    });
+  });
+});

@@ -1,0 +1,24 @@
+[package]
+name = "zolius-lock-program"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+bpf-entrypoint = []
+dev-test-keys = ["zolius-lock-circuits/insecure-test-setup"]
+
+[dependencies]
+pinocchio = { version = "0.11", features = ["cpi"] }
+solana-address = { version = "2.6", features = ["curve25519"] }
+spr-account-checks = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08" }
+spr-hasher = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08" }
+spr-interface = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08" }
+spr-program = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08", features = ["cpi", "compression", "verifier"] }
+wincode = { version = "0.5", features = ["derive"] }
+zolius-lock-circuits = { path = "../lock-circuits", default-features = false, features = ["onchain"] }
+zolius-wire = { path = "../wire" }

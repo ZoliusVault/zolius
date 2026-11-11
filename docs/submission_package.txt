@@ -1,0 +1,172 @@
+﻿================================================================================
+PROJECT SUBMISSION & HANDOVER REPORT — Veil
+Target Chain: Solana (EVM) Mainnet 4663
+Generated: October 2026
+================================================================================
+
+--------------------------------------------------------------------------------
+SECTION 1: BRIEF
+--------------------------------------------------------------------------------
+Status: Completed & Live on Production
+- Repository: https://github.com/veilpools/veil
+- Branch: main (production)
+- Protocol: Veil — Zero-Knowledge privacy layer for Uniswap v4
+
+
+--------------------------------------------------------------------------------
+SECTION 2: DEV KERJA
+--------------------------------------------------------------------------------
+1. Live Production Web URL:
+   https://www.veilpools.tech (apex veilpools.tech → 308 redirect)
+
+2. Platform Routes:
+   - Trade Terminal (Shield / ZK Swap / Withdraw / Trade / Vault):
+     https://www.veilpools.tech/trade
+   - Treasury & Burn Ledger: https://www.veilpools.tech/burn
+   - Verified Contracts Registry: https://www.veilpools.tech/contracts
+   - Chain & Pool Health: https://www.veilpools.tech/status
+   - Docs (ASP policy, owner decisions): https://www.veilpools.tech/docs/asp-policy
+   - Privacy Architecture: https://www.veilpools.tech/privacy
+   - Terms of Service: https://www.veilpools.tech/terms
+
+3. GitHub Repository:
+   https://github.com/veilpools/veil
+   Branch: main
+
+4. Tech Stack & Architecture:
+   - Frontend: Next.js 16.3.4 (App Router) + React 19.2.8 + TypeScript 5 (Strict)
+   - Styling: Custom CSS design system (editorial tokens, no framework lock-in)
+   - Smart Contracts: Solidity 0.8.37 (Cancun, viaIR, native solc pipeline)
+   - AMM Architecture: Uniswap V4 Core (1.0.2) + Uniswap V4 Periphery (1.0.3)
+   - Privacy Engine: 0xbow Privacy Pools core v1.2.1 (audited, vendored, unmodified)
+     Groth16 + Poseidon + LeanIMT, snarkjs WASM proving in-browser
+   - ZK Router: VeilZkRouter (single + multi max-8 + direct payout, invariant-0)
+   - Hook Engine: VeilHook v2 (CREATE2 mined, flags 0x20C4) — 30bps fee,
+     ZK-gated 30-day launch windows (70% burn / 30% ops via VeilTreasury)
+   - Attestation: VeilAttestationRegistry (permissionless self-attest, EIP-191)
+   - Web3 Client: viem 2.57.3 (strict EVM JSON-RPC, chain 4663)
+   - Vault: browser-encrypted notes (PBKDF2-SHA256 + AES-256-GCM), backup-gated
+   - Testing: Vitest (39 files, 232 tests, all green) + tsc clean + live gates
+
+5. Documentation Index:
+   - Project Report (report.md): https://github.com/veilpools/veil/blob/main/docs/report.md
+   - Owner Decisions: https://github.com/veilpools/veil/blob/main/docs/DECISIONS.md
+   - ASP Policy: https://github.com/veilpools/veil/blob/main/docs/ASP-POLICY.md
+   - Mainnet Deployment Record: https://github.com/veilpools/veil/blob/main/docs/MAINNET-DEPLOYMENT-2026-10-12.md
+   - Pons Readiness (token reqs + cutover): https://github.com/veilpools/veil/blob/main/docs/PONS-TOKEN-REQUIREMENTS.md
+   - Main Repository README: https://github.com/veilpools/veil/blob/main/README.md
+
+
+--------------------------------------------------------------------------------
+SECTION 3: QUALITY ASSURANCE (QA) REPORT
+--------------------------------------------------------------------------------
+[PASS] 1. Code Quality & Compilation:
+   - Strict TypeScript compilation: Zero errors (`npx tsc --noEmit` exit code 0).
+   - Full test suite: 39 files, 232 tests, all green (`pnpm test`).
+   - Clean modular layout: contracts in `contracts/`, builders in `lib/`,
+     flows in `app/trade`, scripts per operation in `scripts/`.
+   - Real onchain logic: live slot0 quotes, Groth16 proofs, slippage bounds,
+     fail-closed guards everywhere; no static placeholders on live paths.
+
+[PASS] 2. Responsive UI & Design:
+   - Desktop: trade workstation + live telemetry + journey guide + vault.
+   - Mobile/tablet: responsive tabs, stacking panels, touch-size targets.
+   - Guided 1-2-3-4 journey, trader entry, glossary disclosure, backup gates.
+   - Chain-aware copy (zero testnet leakage on mainnet paths).
+
+[PASS] 3. End-to-End Application Flow (proven LIVE on mainnet 4663):
+   - Shield 0.001 ETH → note (tx 0x12f4c959… block 87207877).
+   - Full-ZK single: relay → swap → 0.001 VEIL note (tx 0xa0c58d8b… block 87212914).
+   - Withdraw VEIL note → fresh recipient (tx 0x4f24a9da… block 87216572).
+   - Shield VEIL → direct payout visible (txs 0x2a197f60… / 0x546762b9…).
+   - Self-attest + gated swap + treasury fee (tx 0x4228714b…).
+   - Treasury burn, totalBurned = 966554831016930 (tx 0x0451edd3…).
+   - Relay-to-self rescues (proof cycle 0x435a…, parked note 0x49302e…).
+   - Multi-note: implemented (contract + UI, max 8), execution pending funding.
+
+[PASS] 4. Automated Test Verification:
+   - `pnpm test`: 39 files / 232 tests passed.
+   - `npx tsc --noEmit`: exit code 0.
+   - Live invariant gate (`verify-pool-invariant`): deposits − withdrawn = balance, 5/5.
+
+[PASS] 5. GitHub Repository Cleanliness:
+   - Working tree clean, main synced with origin/main.
+   - Sensitive Data: `.env*.local` strictly gitignored; note files gitignored;
+     private keys never committed; server non-custodial, never holds user funds.
+
+
+--------------------------------------------------------------------------------
+SECTION 4: ON-CHAIN MAINNET CONTRACT ADDRESSES (Solana 4663)
+--------------------------------------------------------------------------------
+
+Network: Solana Mainnet-Beta (EVM)
+Chain ID: 4663
+Native Currency: ETH
+Explorer: https://solscan.io
+Mirror (TLS-down): https://solscan.io
+
+1. 0xbow Entrypoint (UUPS proxy):
+   Address: 0x96cb8b1836d341a6f5f1f54428bd6696c8b950b1
+   Tx Hash: 0x4c075711fcb3f7bbf35816f7a3a8de44fb02d7f77b36fb9791e944dc91971344
+   Block:   86334089
+
+2. 0xbow ETH Privacy Pool (0.001 fixed):
+   Address: 0x10c17b7538e13c63b890fea52708846e88bb1932
+   Tx Hash: 0x510013dbeb7a2dd92a69a06239390f4cd747b538dd3d3b664b16bfcfacb40215
+   Block:   86334136
+
+3. 0xbow VEIL Privacy Pool (0.001 fixed):
+   Address: 0xdb9f182670da2cc6c5ddd432ec98a45e4f2290d1
+   Tx Hash: 0xcd91b03c04306b05e734cc52bebba958763014980e718fb6a88474468a3a59e5
+   Block:   86334185
+
+4. VeilZkRouter (single + multi + direct):
+   Address: 0x0fb48c9552154ea028cbd812430e1ea3465a9b4c
+   Tx Hash: 0xcf51d62476e1618193a301de7d446d8b3fd2daa74ad02945923d6202c6208aa5
+   Block:   86334911
+
+5. VeilHook v2 (0x20C4, 30bps, CREATE2 salt …4b7d):
+   Address: 0xf95f041462ee34c2ea7b953a879838133ef820c4
+   Tx Hash: 0xae8ca8cf175a0a0c00d2e6b536a0556bbacef1bc92c8a6fa35c63db34ca37048
+   Block:   (hook deploy, nonce-ordered ledger)
+
+6. VeilAttestationRegistry v2 (Blockscout-verified):
+   Address: 0xd1f17c70067f1cc2b478606b3f0faa18ee8add1d
+   Tx Hash: 0xb74ef01945acb222681715915a3a81e603d0f0a63fe09e02e62379b9371718f2
+   Block:   86334674
+
+7. VeilTreasury (70% burn, totalBurned = 966554831016930):
+   Address: 0xb68c3d25e5e9902363e8e10d5c0a471e65be8152
+   Tx Hash: 0x2166a1ef7803003347277a98f864bd81a8cf028425f19208d46b231642fe2106
+   Block:   86334474
+
+8. VeilShieldRouter (fixed R1):
+   Address: 0x3db4ae3429f1507aa0cd31c740a0fd276e22a55c
+   Tx Hash: 0x877e3c8d3089c2bb62d45d34ac021da52cb1c2fb9cddc1eb5d3f0c570ad748ed
+   Block:   86334766
+
+9. MainnetLiquidityHelper v2 (recoverable seeding):
+   Address: 0xb4194deb8a51b69118e5d5414d7d08326a2e9b0b
+   Tx Hash: 0xf42074984647e1f0173f406020ec53f1535042505babf79647d50fbad26176a8
+   Block:   87186428
+
+10. MainnetSwapHelper (gated swaps):
+    Address: 0x08b11d4d5fc78789e305e8437c45c52488a19a58
+    Tx Hash: 0x6dce7d20cd022adf8f1cc1bcd780973f61f81149c683e93c9156f846c3cb17d1
+    Block:   (gated-seed era)
+
+11. Temp VEIL Token (pre-Pons, canonical on Pons later):
+    Address: 0xe0e11ec0d62eda12de796d025d6334fadfe5ab2a
+
+12. Legacy pools (exit-only, paused):
+    ETH 0x15f7e378410719438dd20b12d4c440ba1863e892 /
+    VEIL05 0x493f64d4163fe1f966c423f9338cd955e80a99df /
+    VEIL2 0x3783db43f4f08294da849747ecc0e93e7a06452a3061de17
+
+Full 23-transaction deploy ledger (nonces 0–22, blocks 86333824–86334911,
+all success): deployments/mainnet-deploy-txs-2026-10-12.json
+Verification: Sourcify 10/10 on chain 4663. Blockscout checkmarks pending
+their verifier's solc 0.8.37 support (contracts built with 0.8.37, their
+max is 0.8.36) — honestly disclosed on /contracts.
+================================================================================
+

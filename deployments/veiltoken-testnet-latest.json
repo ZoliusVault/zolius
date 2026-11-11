@@ -1,0 +1,16 @@
+{
+  "network": "robinhood-testnet",
+  "chainId": 46630,
+  "contract": "VeilToken",
+  "address": "0xeb92aabf97df261c053cc1914ca4a8872f54e70b",
+  "tx": "0x8da60de2c0ea2ef7ea65ed87fb978eb0d78af044864f24a174b86f9794b37b22",
+  "blockNumber": 130278609,
+  "args": {
+    "name": "Veil",
+    "symbol": "VEIL",
+    "supply": "1000000000000000000000000000"
+  },
+  "deployer": "0x272568D25b9634Ad8A4e8E8CBB10b729f41C781d",
+  "temporary": true,
+  "note": "Temporary protocol token for end-to-end testing. Canonical token launches on Pons."
+}

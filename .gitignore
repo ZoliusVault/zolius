@@ -1,0 +1,27 @@
+node_modules/
+.next/
+out/
+target/
+**/target/
+.env.local
+.env*.local
+*.log
+e2e-note-backup.json
+.superpowers/
+deployments/*.tmp.json
+deployments/migrate-mainnet-pending.json
+*.tsbuildinfo
+.DS_Store
+DevBrief-Veil.md
+Zolius Vault Developer Brief*.md
+
+.vercel
+.env*
+!.env.example
+!.env.mainnet.example
+
+# live note secrets (unspendable-if-leaked funds at stake) - NEVER commit
+deployments/tmp-*.json
+deployments/*-note.json
+deployments/*-note.tmp.json
+verification/stdjson/

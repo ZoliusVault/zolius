@@ -1,0 +1,30 @@
+# Zolius Vault
+
+> Self-Custodial Confidential Vault & Transfers on Solana Privacy Rings
+> Protocol: Solana Privacy Rings (ML-KEM-768 + Groth16 zk-SNARKs)
+> Network: Solana Mainnet-Beta
+> App: https://zolius.com/app
+> Twitter / X: https://x.com/zoliusvault
+
+## Overview
+Zolius Vault is a self-custodial privacy workstation on Solana:
+- **Deposit & Shield**: Blind public SOL and SPL tokens into the Solana Privacy Program. State updates in a 26-level LeanIMT Poseidon Merkle tree.
+- **Confidential ZK Swap**: Exchange shielded assets via Cross-Program Invocation (CPI) to DEX liquidity without exposing transaction amounts on-chain.
+- **Confidential Timelock Escrow**: Time-locked confidential transfers and vesting with deterministic clock release and sender revocation controls.
+- **Decoupled Unshielding / Withdraw**: Client-side Groth16 witness generation breaks all linkability to deposit history upon withdrawal to fresh recipient addresses.
+- **Quantum-Ready Viewing Keys**: Off-chain viewing keys, memos, and vault backups derived deterministically (ZOLIUS/vault/v1) and encrypted with ML-KEM-768 (X-Wing hybrid lattice encryption).
+
+## Key Technical Specifications
+- **On-Chain ZK Proof System**: Groth16 SNARKs over BN254 with Poseidon hashing on Solana SVM.
+- **Off-Chain Post-Quantum Suite**: ML-KEM-768 (FIPS 203) combined with X25519 (X-Wing KEM) + XChaCha20-Poly1305.
+- **Solana Privacy Program**: ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW (Audited by Certora, OtterSec, and zkSecurity).
+- **Zolius Swap Program**: zolSwap111111111111111111111111111111111111 (solana-verify reproducible build).
+- **Zolius Lock Program**: zolLock111111111111111111111111111111111111 (solana-verify reproducible build).
+- **Execution Environment**: Solana Mainnet-Beta.
+
+## Core Workstation & Architecture
+- [Vault Terminal](/app) - Single-page workstation (Shield, ZK Swap, Timelock, Withdraw, Vault Notes).
+- [Quantum Specifications](/quantum) - Post-quantum viewing key roadmap and cryptographic specifications.
+- [Solana Programs Registry](/contracts) - Verifiable builds, program IDs, and security audit reports.
+- [Privacy Policy](/privacy) - Zero server-side custody and client-side proof generation architecture.
+- [Terms of Service](/terms) - Protocol usage terms.

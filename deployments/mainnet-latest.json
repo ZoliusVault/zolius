@@ -1,0 +1,45 @@
+{
+  "network": "Robinhood Chain",
+  "chainId": 4663,
+  "deployedAt": "2026-10-06T14:53:24.920Z",
+  "deployer": "0x272568D25b9634Ad8A4e8E8CBB10b729f41C781d",
+  "contracts": {
+    "VeilCreate2Deployer": {
+      "address": "0xe4c3615db1bdeaf7b82b5568bd73f20f5666f008",
+      "tx": "0xc211a0b5bb3d75d739e91000855e8db913d14fda726a3ae022e8ecc0bcf82297",
+      "blockNumber": 81715559
+    },
+    "ShieldedVerifierMock": {
+      "address": "0x797e2aa1f3225ab38bfc6441a3f4b44e95158cda",
+      "tx": "0xc970c63fba6ea59192bb9cedc8326a786c1b40767afd7a297aefa164e5462d03",
+      "blockNumber": 81715610
+    },
+    "ShieldedPool_ETH": {
+      "address": "0xdd0fb7fc7f1398fd1398a594f7a0ce934caa7ea0",
+      "tx": "0x017dcfe62af5cf9e104dced0aa609e99b778c727061dd85ad31fd5de585e8538",
+      "blockNumber": 81715648
+    },
+    "VeilTreasury": {
+      "address": "0x8cd39f9195bd00b193a164f0790f3fc0dc4f3b34",
+      "tx": "0x28ebc0f765a37898a97ba22fd92782bdeca218749d9b67ce60bdc0c4da510cec",
+      "blockNumber": 81715686
+    },
+    "VeilAttestationRegistry": {
+      "address": "0xa7f7e7887a4fa00cc934abe39cdd470cfdc9a855",
+      "tx": "0xfe03160146404d1cd380ca3cd51abd7109a49035e7fee48e9264196244199e25",
+      "blockNumber": 81715718
+    },
+    "VeilHook": {
+      "address": "0x9df0b52bf290a13e11c73c56c4c533e3887760c4",
+      "tx": "0x111c4f8cf22a0bee198b2ab3825bed52e2e1b8525d7904ce824614d7cb745731",
+      "blockNumber": 81715762,
+      "salt": "0x0000000000000000000000000000000000000000000000000000000000006048"
+    },
+    "VeilShieldRouter": {
+      "address": "0x01a05f87c2c227a1b382cbc2e7e63b186538c86d",
+      "tx": "0x29b074e85187b02c255e54298675161c61d3157642592210222a95b30cc45002",
+      "blockNumber": 81715797
+    }
+  },
+  "status": "completed"
+}

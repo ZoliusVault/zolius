@@ -1,0 +1,29 @@
+[package]
+name = "zolius-client"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+test-prover = ["dep:xark", "zolius-lock-circuits/onchain", "zolius-lock-circuits/insecure-test-setup", "zolius-swap-circuits/onchain", "zolius-swap-circuits/insecure-test-setup"]
+localnet = ["test-prover", "dep:spr-client", "dep:solana-keypair", "dep:solana-signer"]
+
+[dependencies]
+anyhow = "1"
+xark = { version = "0.3.0", optional = true }
+solana-address = { version = "2.6", features = ["curve25519"] }
+solana-instruction = "3.4"
+solana-keypair = { version = "3.1.2", optional = true }
+solana-signer = { version = "3.0", optional = true }
+spr-client = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08", features = ["solana-rpc"], optional = true }
+spr-hasher = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08" }
+spr-interface = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08" }
+spr-keypair = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08" }
+spr-program = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08", features = ["client"] }
+spr-transaction = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08" }
+zolius-lock-circuits = { path = "../lock-circuits" }
+zolius-swap-circuits = { path = "../swap-circuits" }
+zolius-wire = { path = "../wire" }
+
+[dev-dependencies]
+solana-keypair = "3.1.2"
