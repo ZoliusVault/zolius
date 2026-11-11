@@ -32,4 +32,4 @@ Make requires one SPP marker message whose 64 bytes are the second output's comm
 
 ## Boundaries
 
-Circuit proof inputs bind the private transaction hash, but the programs also rely on the real Privacy Rings program to validate its proof, nullifiers, owner signatures and value conservation. Lock create/claim and malformed-instruction rejection have passed isolated localnet checks. Swap CPI, expiry edges, cancellation, encrypted output discovery and cluster-specific deployment IDs still need exercising together. A native proof test alone does not establish this end-to-end behavior.
+Circuit proof inputs bind the private transaction hash, but the programs also rely on the real Privacy Rings program to validate its proof, nullifiers, owner signatures and value conservation. Lock create/claim and malformed-instruction rejection passed isolated localnet checks. Swap make passed locally; take currently fails during the Helius SPP CPI with `TransactProofVerificationFailed`, so the private order flow is not complete. Expiry edges, cancellation and cluster-specific deployment IDs also remain unverified.
