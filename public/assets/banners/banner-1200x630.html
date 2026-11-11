@@ -123,18 +123,23 @@
     }
 
     .brand-icon {
-      width: 42px;
-      height: 42px;
+      width: 48px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
-      filter: drop-shadow(0 0 12px rgba(255, 140, 0, 0.25));
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 0 24px rgba(236, 72, 153, 0.35), 0 0 40px rgba(168, 85, 247, 0.25);
     }
 
     .brand-icon img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
+      display: block;
     }
 
     .brand-name {
@@ -344,7 +349,7 @@
       <div class="top-bar">
         <div class="brand-group">
           <div class="brand-icon">
-            <img src="/veil-logo-white.svg" alt="Zolius Vault Mark">
+            <img src="/zolius-logo.png" alt="Zolius Vault Official Mark">
           </div>
           <div class="brand-name">
             Zolius
@@ -354,7 +359,7 @@
 
         <div class="network-pill">
           <img src="/assets/logo/solana-white.svg" alt="Solana">
-          <span>MAINNET-BETA</span>
+          <span>SOLANA DEVNET</span>
           <span class="live-dot"></span>
           <span>PRIVACY RINGS</span>
         </div>
@@ -397,8 +402,12 @@
         </div>
 
         <div class="url-chip">
-          <span class="dot"></span>
-          <span>zolius.vault</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color: #FF8C00;">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          <span style="color: #FFFFFF; font-weight: 700;">@ZoliusVault</span>
+          <span style="color: rgba(255, 255, 255, 0.4); margin: 0 4px;">·</span>
+          <span style="color: #FF8C00;">zoliusvault.tech</span>
         </div>
       </div>
     </div>

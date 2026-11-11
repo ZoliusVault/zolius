@@ -17,6 +17,8 @@ Zolius Vault Developer Brief*.md
 
 .vercel
 .env*
+scripts/.chrome_user_data/
+scripts/temp_*.html
 !.env.example
 !.env.mainnet.example
 
