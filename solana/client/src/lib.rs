@@ -112,6 +112,7 @@ pub fn build_instruction(ctx: Context, action: Action) -> Result<Instruction, Er
         return Err(Error::OwnerSigner);
     }
     let spp_bytes = ctx.spp.serialize().map_err(|_| Error::Serialization)?;
+    let signer_start = 4 + ctx.input_trees.len() + ctx.spp.inputs.len();
     let data = match action {
         Action::LockCreate {
             proof,
@@ -181,7 +182,23 @@ pub fn build_instruction(ctx: Context, action: Action) -> Result<Instruction, Er
         data: ctx.spp,
     };
     let mut accounts = vec![AccountMeta::new_readonly(ctx.actor, true)];
-    accounts.extend(transact.cpi_accounts(&[pda]));
+    let mut cpi_accounts = transact.cpi_accounts(&[pda]);
+    // SPP commits owner signer order in first-occurrence input order. A Swap
+    // take spends the PDA-owned order first, then the taker's wallet input;
+    // the PDA signer must therefore precede the external signer in its CPI
+    // account list. The SDK helper normally appends program PDAs after users.
+    if matches!(&action, Action::SwapTake { .. }) {
+        if let Some(position) = cpi_accounts
+            .iter()
+            .enumerate()
+            .skip(signer_start)
+            .find_map(|(index, account)| (account.pubkey == pda).then_some(index))
+        {
+            let pda_account = cpi_accounts.remove(position);
+            cpi_accounts.insert(signer_start, pda_account);
+        }
+    }
+    accounts.extend(cpi_accounts);
     Ok(Instruction {
         program_id: ctx.program_id,
         accounts,
