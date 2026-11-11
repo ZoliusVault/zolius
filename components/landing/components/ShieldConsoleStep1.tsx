@@ -272,7 +272,7 @@ export const ShieldConsoleStep1: React.FC = () => {
         })}
       </div>
 
-      {/* Telemetry Readout Grid */}
+      {/* Telemetry Readout Grid — Locked row heights & nowrap to eliminate jumping */}
       <div
         style={{
           background: "var(--color-surface)",
@@ -282,37 +282,38 @@ export const ShieldConsoleStep1: React.FC = () => {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: "var(--space-3)",
+          boxSizing: "border-box",
         }}
       >
-        <div>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-caption)", color: "var(--color-muted)", marginBottom: 4 }}>
+        <div style={{ minHeight: "44px", boxSizing: "border-box" }}>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-caption)", color: "var(--color-muted)", marginBottom: 4, whiteSpace: "nowrap" }}>
             Depositor Asset
           </div>
-          <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-text)" }}>
+          <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             <CountUp value={current.amount} />
           </div>
         </div>
 
-        <div>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-caption)", color: "var(--color-muted)", marginBottom: 4 }}>
+        <div style={{ minHeight: "44px", boxSizing: "border-box" }}>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-caption)", color: "var(--color-muted)", marginBottom: 4, whiteSpace: "nowrap" }}>
             Client Secret (s)
           </div>
-          <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-accent)" }}>
+          <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-accent)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {stage >= 1 ? current.secretEntropy : "0x••••••••••••"}
           </div>
         </div>
 
-        <div>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-caption)", color: "var(--color-muted)", marginBottom: 4 }}>
+        <div style={{ minHeight: "44px", boxSizing: "border-box" }}>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-caption)", color: "var(--color-muted)", marginBottom: 4, whiteSpace: "nowrap" }}>
             Poseidon Leaf C(s,n)
           </div>
-          <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-text)" }}>
+          <div style={{ fontFamily: "monospace", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {stage >= 2 ? current.poseidonHash : "Pending Derivation"}
           </div>
         </div>
 
-        <div>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-caption)", color: "var(--color-muted)", marginBottom: 4 }}>
+        <div style={{ minHeight: "44px", boxSizing: "border-box" }}>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-caption)", color: "var(--color-muted)", marginBottom: 4, whiteSpace: "nowrap" }}>
             Router Invariant
           </div>
           <div
@@ -321,9 +322,12 @@ export const ShieldConsoleStep1: React.FC = () => {
               fontSize: "var(--text-body-sm)",
               fontWeight: 600,
               color: stage >= 3 ? "var(--color-accent)" : "var(--color-muted)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
-            {stage >= 3 ? "0.0000 Balance [VERIFIED]" : "Balance == 0 Check"}
+            {stage >= 3 ? "0.0000 [VERIFIED]" : "0.0000 [CHECK]"}
           </div>
         </div>
       </div>
