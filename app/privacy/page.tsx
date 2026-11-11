@@ -44,7 +44,7 @@ export default function PrivacyPage() {
                 fontWeight: 600,
               }}
             >
-              SOLANA MAINNET-BETA
+              SOLANA DEVNET
             </span>
             <span>// Cryptographic Invariants</span>
           </div>

@@ -3,13 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, LogOut, Copy, Check, ChevronDown, Menu, X as CloseIcon, Shield, FileText, Flame, ExternalLink, Activity, BookOpen } from "lucide-react";
+import { ArrowLeft, LogOut, Copy, Check, ChevronDown, Menu, X as CloseIcon, Shield, FileText, ExternalLink } from "lucide-react";
 import { WalletModal } from "./WalletModal";
 import { ZoliusLogo } from "./VeilLogo";
 import { SolanaLogo, XLogo } from "./TokenLogos";
-import { APP_CHAIN_ID, appChain } from "@/lib/chains";
-import { fetchAllTokenBalances } from "@/lib/balances";
-import { SUPPORTED_TOKENS } from "./TokenSelectModal";
 import {
   SOLANA_WALLETS,
   loadWallet,
@@ -26,8 +23,6 @@ export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [balances, setBalances] = useState<Record<string, string>>({});
-  const [balancesLoading, setBalancesLoading] = useState(false);
   const walletMenuRef = useRef<HTMLDivElement>(null);
 
   // Close the wallet menu on outside click or Escape (standard disclosure).
@@ -46,23 +41,6 @@ export function Navbar() {
       document.removeEventListener("keydown", onKey);
     };
   }, [isMenuOpen]);
-
-  useEffect(() => {
-    if (!isMenuOpen || !wallet?.address) return;
-    let cancelled = false;
-    setBalancesLoading(true);
-    fetchAllTokenBalances(wallet.address as `0x${string}`, SUPPORTED_TOKENS)
-      .then((b) => {
-        if (!cancelled) setBalances(b);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setBalancesLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isMenuOpen, wallet?.address]);
 
   useEffect(() => {
     const sync = () => {
@@ -190,7 +168,7 @@ export function Navbar() {
                 height: "2.25rem",
                 flexShrink: 0,
               }}
-              title="Solana Mainnet-Beta"
+              title="Solana Devnet"
             >
               <SolanaLogo height={22} style={{ opacity: 0.92 }} />
             </div>
@@ -296,41 +274,8 @@ export function Navbar() {
                     >
                       <div>Connected via {walletMeta?.name || "Solana Wallet"}</div>
                       <div style={{ marginTop: "2px", color: "var(--color-text)", fontWeight: 600 }}>
-                        Solana Mainnet-Beta
+                        Solana Devnet
                       </div>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: "4px 10px 8px 10px",
-                        borderBottom: "1px solid var(--color-border)",
-                        marginBottom: "4px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "2px",
-                      }}
-                    >
-                      {balancesLoading ? (
-                        <span style={{ fontSize: "11px", fontFamily: "monospace", color: "var(--color-faint)" }}>
-                          Loading balances…
-                        </span>
-                      ) : (
-                        SUPPORTED_TOKENS.map((t) => (
-                          <div
-                            key={t.symbol}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              fontSize: "11px",
-                              fontFamily: "monospace",
-                              color: "var(--color-text)",
-                            }}
-                          >
-                            <span style={{ color: "var(--color-muted)" }}>{t.symbol}</span>
-                            <span>{balances[t.symbol] ?? "—"}</span>
-                          </div>
-                        ))
-                      )}
                     </div>
 
                     <button
@@ -520,11 +465,6 @@ export function Navbar() {
               <nav style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "18px" }}>
                 {[
                   { href: "/app", label: "Zolius Vault Terminal", icon: Shield, active: pathname === "/app" },
-                  { href: "/status", label: "Protocol Status & Proofs", icon: Activity, active: pathname === "/status" },
-                  { href: "/contracts", label: "Verified Contracts", icon: FileText, active: pathname === "/contracts" },
-                  { href: "/burn", label: "Burn & Buyback Flywheel", icon: Flame, active: pathname === "/burn" },
-                  { href: "/docs/decisions", label: "Architecture Decisions", icon: BookOpen, active: pathname.startsWith("/docs/decisions") },
-                  { href: "/docs/asp-policy", label: "ASP Policy & Proofs", icon: Shield, active: pathname.startsWith("/docs/asp-policy") },
                   { href: "/privacy", label: "Privacy Policy", icon: FileText, active: pathname === "/privacy" },
                   { href: "/terms", label: "Terms of Service", icon: FileText, active: pathname === "/terms" },
                 ].map((item) => {
@@ -614,8 +554,8 @@ export function Navbar() {
                   color: "var(--color-muted)",
                 }}
               >
-                <span>Solana Mainnet-Beta</span>
-                <span>Mainnet v1.2.1</span>
+                <span>Solana Devnet</span>
+                <span>Privacy Ring</span>
               </div>
             </div>
           </div>

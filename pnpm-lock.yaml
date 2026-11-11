@@ -29,6 +29,9 @@ importers:
       '@openzeppelin/contracts':
         specifier: 5.4.0
         version: 5.4.0
+      '@solana/kit':
+        specifier: ^8.6.0
+        version: 8.6.0(typescript@5.9.3)
       '@solana/web3.js':
         specifier: ^3.2.1
         version: 3.2.1(typescript@5.9.3)

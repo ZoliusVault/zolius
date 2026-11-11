@@ -106,7 +106,7 @@ export function WalletModal({
               fontWeight: 600,
             }}
           >
-            Solana Mainnet-Beta
+            Solana Devnet
           </span>
         </div>
         <button
@@ -136,7 +136,7 @@ export function WalletModal({
           lineHeight: "1.5",
         }}
       >
-        Select a Solana wallet to access Privacy Rings, decrypt your ML-KEM-768 shielded viewing notes, and manage confidential transfers.
+        Connect a Solana wallet to register its Privacy Ring identity, shield SOL, send private payments, and withdraw funds.
       </p>
 
       {/* Wallet Grid */}

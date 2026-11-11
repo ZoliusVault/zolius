@@ -8,7 +8,7 @@ import { RevealBox } from "./RevealBox";
 export const CtaSection: React.FC = () => {
   return (
     <section
-      id="demo"
+      id="launch"
       className="cta-cycle"
       style={{
         position: "relative",
@@ -69,8 +69,8 @@ export const CtaSection: React.FC = () => {
           >
             <DecodeText
               segments={[
-                { text: "Ready to trade with " },
-                { text: "true zero-knowledge privacy?", style: { fontFamily: "var(--font-body)" } },
+                { text: "Try private SOL " },
+                { text: "on Solana.", style: { fontFamily: "var(--font-body)" } },
               ]}
             />
           </h2>
@@ -83,7 +83,7 @@ export const CtaSection: React.FC = () => {
               margin: "var(--space-5) 0 0",
             }}
           >
-            Audited core on-chain. Non-custodial by design. Experience self-custodial confidential transfers built on Solana Privacy Rings.
+            Enter the next era of private finance: confidential SOL flows, a quantum-resilient vision, and self-custody by design. Zolius is independent and is not affiliated with Helius.
           </p>
           <div
             style={{

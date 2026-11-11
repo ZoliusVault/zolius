@@ -4,17 +4,25 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [features]
 default = ["circuits"]
 circuits = ["dep:borsh", "dep:xark", "spr-program/client"]
 build-circuits = ["circuits", "spr-program/build"]
 onchain = ["spr-program/verifier"]
 insecure-test-setup = []
+wasm = ["circuits", "spr-program/wasm-prover"]
 
 [dependencies]
 borsh = { version = "1.5", default-features = false, features = ["derive"], optional = true }
 xark = { version = "0.3.0", optional = true }
 spr-program = { git = "https://github.com/helius-labs/zolana", rev = "ca4cf4f6f0c83c0b225342e4bc6f16b3da83eb08" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
+getrandom04 = { package = "getrandom", version = "0.4", features = ["wasm_js"] }
 
 [lints.rust.unexpected_cfgs]
 level = "warn"

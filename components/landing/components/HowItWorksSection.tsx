@@ -15,7 +15,7 @@ export const HowItWorksSection: React.FC = () => {
     >
       <SectionHeader
         kicker="Architecture"
-        title="Live on mainnet — verifiable on-chain."
+        title="Private execution for Solana."
         titleMaxW="22ch"
         kickerColor="#FF8C00"
       />
@@ -65,7 +65,7 @@ export const HowItWorksSection: React.FC = () => {
                 maxWidth: "40ch",
               }}
             >
-              Deposit SOL or SPL/Token-2022 assets. Amounts, balances, and memos are cryptographically blinded into Solana Privacy Rings.
+              Deposit native SOL from your connected wallet. The deposit and amount are public; the resulting Ring balance is private.
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export const HowItWorksSection: React.FC = () => {
                 maxWidth: "40ch",
               }}
             >
-              Execute non-custodial confidential transfers and OTC swaps. Ring proofs protect transaction payloads while keeping custody strictly local.
+              Send private SOL to a wallet registered with Privacy Rings. The amount is confidential while sender and recipient addresses remain public.
             </p>
           </div>
         </div>
@@ -140,7 +140,7 @@ export const HowItWorksSection: React.FC = () => {
               <span style={{ fontFamily: "var(--font-body)", color: "#FF6A7B" }}>
                 Phase 3:{" "}
               </span>
-              <span>Quantum Vault &amp; Exit</span>
+              <span>Withdraw</span>
             </div>
             <p
               style={{
@@ -155,10 +155,10 @@ export const HowItWorksSection: React.FC = () => {
                 maxWidth: "40ch",
               }}
             >
-              Lock in hybrid ML-KEM-768 quantum vaults with X-Wing viewing keys, or execute instant non-custodial withdrawal to any Solana wallet.
+              Withdraw private SOL to a public Solana address. The wallet signs the transaction and the destination and amount are visible on-chain.
             </p>
             <a
-              href="/contracts"
+              href="/app"
               className="lp-how-link"
               style={{
                 marginLeft: "52%",
@@ -173,7 +173,7 @@ export const HowItWorksSection: React.FC = () => {
               }}
             >
               <span className="lp-how-link-label">
-                Explore verified Solana programs
+                Open the Vault
               </span>
               <span className="lp-how-link-arrow" aria-hidden="true">
                 →

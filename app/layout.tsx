@@ -3,32 +3,29 @@ import "./globals.css";
 import { AppLayoutWrapper } from "../components/AppLayoutWrapper";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://zolius.vault"),
+  metadataBase: new URL("https://www.zoliusvault.tech"),
   title: {
-    default: "Zolius Vault — Self-Custodial Confidential Transfers on Solana",
+    default: "Zolius Vault — Private Finance on Solana",
     template: "%s | Zolius Vault",
   },
   description:
-    "Self-custodial confidential transfers built on Solana Privacy Rings, protected by hybrid ML-KEM-768 quantum vaults.",
+    "Confidential finance on Solana, with quantum-resilient viewing-key protection and self-custody by design.",
   keywords: [
     "Zolius Vault",
     "Solana",
     "Privacy Rings",
     "Helius Privacy API",
     "Confidential Transfers",
-    "ML-KEM-768",
-    "Token-2022",
     "Quantum Vault",
-    "X-Wing",
     "Self-Custodial",
   ],
   authors: [{ name: "Zolius Vault" }],
   creator: "@ZoliusVault",
   openGraph: {
-    title: "Zolius Vault — Self-Custodial Confidential Transfers on Solana",
+    title: "Zolius Vault — Private Finance on Solana",
     description:
-      "Self-custodial confidential transfers built on Solana Privacy Rings, protected by hybrid ML-KEM-768 quantum vaults.",
-    url: "https://zolius.vault",
+      "Confidential finance on Solana, with quantum-resilient viewing-key protection and self-custody by design.",
+    url: "https://www.zoliusvault.tech",
     siteName: "Zolius Vault",
     images: [
       {
@@ -47,7 +44,7 @@ export const metadata: Metadata = {
     creator: "@ZoliusVault",
     title: "Zolius Vault — Self-Custodial Confidential Transfers on Solana",
     description:
-      "Self-custodial confidential transfers built on Solana Privacy Rings, protected by hybrid ML-KEM-768 quantum vaults.",
+      "Confidential finance on Solana, with quantum-resilient viewing-key protection and self-custody by design.",
     images: ["/og-banner.png"],
   },
   icons: {

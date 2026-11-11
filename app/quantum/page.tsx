@@ -14,14 +14,14 @@ export default function QuantumPage() {
       id: "w1",
       title: "Encrypted Vault Backup",
       spec: "Hybrid X-Wing KEM (X25519 + ML-KEM-768) + XChaCha20-Poly1305",
-      status: "LIVE ON-CHAIN",
-      badgeColor: "#059669",
+      status: "BUILDING",
+      badgeColor: "#B45309",
       description:
-        "Deterministic key derivation from wallet signature (ZOLIUS/vault/v1). Viewing keys, token notes, and account preferences encrypted off-chain against harvest-now-decrypt-later attacks.",
+        "Planned hybrid encryption for viewing-key and backup material, designed to reduce harvest-now-decrypt-later exposure. The current Devnet app does not yet encrypt or store these backups.",
       details: [
-        "Uses audited @noble/post-quantum and @noble/curves libraries",
-        "Deterministic offline restore on any device with same wallet",
-        "Zero server custody — ciphertext stored in browser and IPFS backup",
+        "Explore a hybrid X25519 + ML-KEM-768 (X-Wing) design",
+        "Define encrypted backup and device restore flows",
+        "Test key lifecycle and recovery before shipping",
       ],
       tag: "Workstream 1",
     },
@@ -137,7 +137,7 @@ export default function QuantumPage() {
               lineHeight: "1.65",
             }}
           >
-            Solana Privacy Rings protects token amounts on-chain with Groth16 zk-SNARKs. Quantum Vault introduces post-quantum hybrid viewing key encryption (X-Wing KEM: X25519 + ML-KEM-768) to protect transaction history against harvest-now-decrypt-later adversaries.
+            Solana Privacy Rings currently protects private transfers with Groth16 zk-SNARKs. Quantum Vault is Zolius's roadmap for post-quantum hybrid viewing-key encryption (X-Wing KEM: X25519 + ML-KEM-768); it is not yet wired into the Devnet app.
           </p>
         </div>
 
@@ -210,7 +210,7 @@ export default function QuantumPage() {
               color: "var(--color-muted)",
             }}
           >
-            Zolius Vault provides a <strong>quantum-ready vault</strong> for viewing keys, note metadata, and off-chain backups. We do <strong>not</strong> make misleading claims of &quot;full quantum-proof privacy&quot; because on-chain validity proofs in Privacy Rings v1 are Groth16. Every layer displays its verified implementation status below.
+            The Quantum Vault is a <strong>roadmap</strong>, not a currently shipped protection layer. The Devnet app uses the Privacy Rings protocol's Groth16 proofs; post-quantum viewing-key encryption and encrypted backup flows remain planned work.
           </p>
         </div>
       </div>
@@ -375,10 +375,10 @@ export default function QuantumPage() {
       >
         <div>
           <h3 style={{ margin: "0 0 6px 0", fontSize: "18px", fontWeight: 700, color: "var(--color-text)" }}>
-            Ready to initialize your Quantum Vault?
+            Explore private SOL on Devnet while Quantum Vault is being built.
           </h3>
           <p style={{ margin: 0, fontSize: "13px", color: "var(--color-muted)" }}>
-            Derive your viewing key in one click and access confidential transfers on Solana.
+            Current transfers use Solana Privacy Rings. Post-quantum viewing-key protection remains on the roadmap.
           </p>
         </div>
         <Link

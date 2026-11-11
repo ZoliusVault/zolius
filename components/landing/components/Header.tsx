@@ -54,52 +54,6 @@ export const Header: React.FC = () => {
         >
           Visibility Guide
         </a>
-        <Link
-          href="/app?tab=swap"
-          className="lp-link hidden md:inline-block"
-          style={{
-            color: "var(--color-muted)",
-            textDecoration: "none",
-            transition: "opacity var(--duration-fast)",
-          }}
-        >
-          Swap
-        </Link>
-        <Link
-          href="/app?tab=lock"
-          className="lp-link hidden xl:inline-block"
-          style={{
-            color: "var(--color-muted)",
-            textDecoration: "none",
-            transition: "opacity var(--duration-fast)",
-          }}
-        >
-          Lock
-        </Link>
-        <Link
-          href="/quantum"
-          className="lp-link hidden sm:inline-flex items-center gap-1.5"
-          style={{
-            color: "var(--color-muted)",
-            textDecoration: "none",
-            transition: "opacity var(--duration-fast)",
-          }}
-        >
-          <span>Quantum Vault</span>
-          <span
-            style={{
-              fontSize: "9px",
-              fontFamily: "monospace",
-              padding: "1px 5px",
-              borderRadius: "4px",
-              backgroundColor: "rgba(255, 140, 0, 0.15)",
-              color: "var(--color-accent)",
-              fontWeight: 700,
-            }}
-          >
-            ML-KEM
-          </span>
-        </Link>
 
         {/* Action Group: Official X Button + Launch Vault */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>

@@ -44,7 +44,7 @@ export default function TermsPage() {
                 fontWeight: 600,
               }}
             >
-              SOLANA MAINNET-BETA
+              SOLANA DEVNET
             </span>
             <span>// Terms of Service</span>
           </div>

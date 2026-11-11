@@ -3,11 +3,11 @@
 export const metadata: Metadata = {
   title: "Chain & Pool Health Monitor",
   description:
-    "Live cryptographic state, Privacy Rings history, and operational parameters of Zolius Vault on Solana Mainnet-Beta.",
+    "Live executable account checks for Helius Privacy Rings and Zolius programs on Solana Devnet.",
   openGraph: {
     title: "Chain & Pool Health Monitor | Zolius Protocol",
     description:
-      "Live cryptographic state, Privacy Rings history, and operational parameters of Zolius Vault on Solana Mainnet-Beta.",
+      "Live executable account checks for Helius Privacy Rings and Zolius programs on Solana Devnet.",
     images: ["/og-banner.png"],
   },
 };

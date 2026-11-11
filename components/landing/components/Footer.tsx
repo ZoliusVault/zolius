@@ -48,10 +48,9 @@ export const Footer: React.FC = () => {
             <h2>Protocol</h2>
             <ul>
               <li><Link href="/app">Confidential Transfers</Link></li>
-              <li><Link href="/app?tab=swap">Zolius Swap</Link></li>
-              <li><Link href="/app?tab=lock">Timelock Escrow</Link></li>
-              <li><Link href="/app?tab=vault">Vault Notes Manager</Link></li>
-              <li><Link href="/quantum">Quantum Vault</Link></li>
+              <li><Link href="/app?tab=swap">Private send</Link></li>
+              <li><Link href="/app?tab=withdraw">Withdraw</Link></li>
+              <li><Link href="/app?tab=vault">Private notes</Link></li>
             </ul>
           </nav>
 
@@ -59,22 +58,17 @@ export const Footer: React.FC = () => {
           <nav className="landing-footer__column landing-footer__resources" aria-label="Architecture">
             <h2>Architecture</h2>
             <ul>
-              <li><Link href="/contracts">Solana Program IDs</Link></li>
               <li><a href="https://www.helius.dev/docs/privacy" target="_blank" rel="noopener noreferrer">Solana Privacy Rings</a></li>
-              <li><Link href="/quantum">ML-KEM-768 Specs</Link></li>
-              <li><Link href="/contracts">Verifiable Builds</Link></li>
-              <li><Link href="/status">System Status</Link></li>
+              <li><Link href="/quantum">Quantum Vault roadmap</Link></li>
             </ul>
           </nav>
 
-          {/* Security & Audits Column */}
+          {/* Upstream protocol references */}
           <nav className="landing-footer__column landing-footer__company" aria-label="Security">
-            <h2>Security &amp; Audits</h2>
+            <h2>Protocol references</h2>
             <ul>
-              <li><a href="https://www.certora.com" target="_blank" rel="noopener noreferrer">Certora Formal Verification</a></li>
-              <li><a href="https://osec.io" target="_blank" rel="noopener noreferrer">OtterSec Security Audit</a></li>
-              <li><a href="https://www.zksecurity.xyz" target="_blank" rel="noopener noreferrer">zkSecurity Circuit Audit</a></li>
-              <li><a href="https://solscan.io/account/ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW" target="_blank" rel="noopener noreferrer">Solscan Canonical Program</a></li>
+              <li><a href="https://www.helius.dev/docs/privacy" target="_blank" rel="noopener noreferrer">Solana Privacy Rings docs</a></li>
+              <li><a href="https://github.com/helius-labs/privacy-ring-examples" target="_blank" rel="noopener noreferrer">Helius examples</a></li>
             </ul>
           </nav>
 
@@ -84,7 +78,6 @@ export const Footer: React.FC = () => {
             <ul>
               <li><Link href="/privacy">Privacy Architecture</Link></li>
               <li><Link href="/terms">Terms of Service</Link></li>
-              <li><Link href="/docs/decisions">Architecture Decisions</Link></li>
             </ul>
           </nav>
         </div>
@@ -103,12 +96,12 @@ export const Footer: React.FC = () => {
               <span>X (Twitter)</span>
             </a>
             <a
-              href="https://solscan.io"
+              href="https://explorer.solana.com/"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              <span>Solana Mainnet</span>
+              <span>Solana Explorer</span>
               <svg
                 aria-hidden="true"
                 width="14"

@@ -125,6 +125,7 @@ export function detectSolana(id: SolanaWalletId): SolanaProvider | null {
 export const detectEvm = detectSolana; // Backward-compatibility alias
 
 const STORAGE_KEY = "zolius_solana_wallet";
+const LEGACY_DEMO_ADDRESS = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU";
 
 export interface StoredWallet {
   id: SolanaWalletId;
@@ -137,6 +138,10 @@ export function loadWallet(): StoredWallet | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredWallet;
+    if (parsed?.address === LEGACY_DEMO_ADDRESS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
     if (parsed && parsed.id && parsed.address) {
       return parsed;
     }
@@ -194,21 +199,6 @@ export async function connectSolana(id: SolanaWalletId): Promise<{ address: stri
   const provider = detectSolana(id);
 
   if (!provider) {
-    // If not detected, provide deterministic dev demo address or throw install error
-    if (process.env.NODE_ENV !== "production") {
-      // In dev mode when browser has no extension, allow simulation
-      const mockAddr = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU";
-      saveWallet(id, mockAddr);
-      return {
-        address: mockAddr,
-        provider: {
-          publicKey: { toBase58: () => mockAddr, toString: () => mockAddr },
-          isConnected: true,
-          connect: async () => ({ publicKey: { toBase58: () => mockAddr } }),
-          disconnect: async () => {},
-        },
-      };
-    }
     const option = SOLANA_WALLETS.find((w) => w.id === id);
     const url = option?.installUrl || "https://phantom.app";
     if (typeof window !== "undefined") {

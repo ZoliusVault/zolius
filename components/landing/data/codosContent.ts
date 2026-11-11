@@ -25,15 +25,15 @@
     statements: [
       {
         head: "Every public on-chain transfer exposes your balance and trade size.",
-        sub: "Public explorers broadcast your exact holdings, payroll, and trading size to competitors."
+        sub: "A public transfer exposes its sender, recipient, asset, and amount to anyone reading the chain."
       },
       {
-        head: "Harvest now, decrypt later threatens long-term viewing keys.",
-        sub: "Adversaries store encrypted traces today to break them with future quantum computers."
+        head: "Wallet activity can be linked across public transactions.",
+        sub: "Addresses and transaction timing remain visible even when a private Ring hides transfer amounts."
       },
       {
-        head: "Zolius Vault encrypts assets and viewing keys with post-quantum defense.",
-        sub: "Solana Privacy Rings confidential balances backed by hybrid X-Wing ML-KEM-768 encryption."
+        head: "Privacy Rings keep private transfer amounts off the public view.",
+        sub: "The default Ring encrypts assets and amounts; sender and recipient addresses are still visible."
       }
     ]
   },
