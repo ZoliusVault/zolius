@@ -118,6 +118,17 @@ export const UsdcLogo: React.FC<LogoProps> = ({ size = 18, className = "" }) => 
   />
 );
 
+export const SplLogo: React.FC<LogoProps> = ({ size = 18, className = "" }) => (
+  <img
+    src="/assets/logo/spl.svg"
+    alt="SPL Token"
+    width={size}
+    height={size}
+    style={{ width: `${size}px`, height: `${size}px`, objectFit: "contain", display: "inline-block", verticalAlign: "middle", flexShrink: 0 }}
+    className={className}
+  />
+);
+
 export const CertoraLogo: React.FC<{ height?: number; className?: string }> = ({ height = 18, className = "" }) => (
   <img
     src="/assets/logo/certora.png"
@@ -162,6 +173,7 @@ export const TokenIcon: React.FC<{
   const sym = (symbol || asset || "").toUpperCase();
   if (sym === "SOL" || sym === "WSOL") return <SolLogo size={size} className={className} />;
   if (sym === "USDC") return <UsdcLogo size={size} className={className} />;
+  if (sym === "SPL" || sym.includes("SPL") || sym === "TOKEN-2022") return <SplLogo size={size} className={className} />;
 
   const isEth =
     sym === "ETH" ||

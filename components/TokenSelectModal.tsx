@@ -25,6 +25,38 @@ export const SUPPORTED_TOKENS: TokenItem[] = [
   // priceUsd is deprecated: no oracle is wired yet, so all quotes hide USD.
   // Kept as 0 for type compatibility. Do not use for output math.
   {
+    symbol: "SOL",
+    name: "Solana",
+    address: "So11111111111111111111111111111111111111112",
+    decimals: 9,
+    balance: "0.00",
+    priceUsd: 0,
+    verified: true,
+    isPoolSupported: true,
+    poolDenomination: "0.1 SOL",
+    badge: "Native Gas",
+    iconBg: "rgba(20, 241, 149, 0.1)",
+    iconSvg: (
+      <img src="/assets/logo/solana.svg" alt="Solana" className="w-full h-full object-contain" />
+    ),
+  },
+  {
+    symbol: "SPL",
+    name: "SPL / Token-2022",
+    address: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    decimals: 9,
+    balance: "0.00",
+    priceUsd: 0,
+    verified: true,
+    isPoolSupported: true,
+    poolDenomination: "Custom Mint",
+    badge: "Confidential Mint",
+    iconBg: "rgba(255, 140, 0, 0.1)",
+    iconSvg: (
+      <img src="/assets/logo/spl.svg" alt="SPL Token" className="w-full h-full object-contain" />
+    ),
+  },
+  {
     symbol: "ETH",
     name: "Native Ether",
     address: "0x0000000000000000000000000000000000000000",
