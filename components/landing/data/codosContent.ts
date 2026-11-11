@@ -215,7 +215,7 @@
       },
       {
         title: "Developers",
-        links: ["Solana Privacy Rings", "Program Contracts", "Verifiable Builds", "GitHub"]
+        links: ["Solana Privacy Rings", "Program Contracts", "Verifiable Builds"]
       },
       {
         title: "Security & Audits",
