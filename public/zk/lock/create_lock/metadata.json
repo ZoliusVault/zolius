@@ -1,0 +1,18 @@
+{
+  "protocol": "groth16",
+  "curve": "bn254",
+  "setup_mode": "single-party",
+  "production_safe": false,
+  "circuit_hash": "ed56da9bbafb66eda569af5166ba032689f58f78a41d6dc6ea36307c45d2db66",
+  "digest": "1c3e68f441d000d0a2b8d278c2c2c06d",
+  "verifying_key_sha256": "40353624c4e8178c2bc15954991f49dbbb87ade5e160804abb55183dddf2cae8",
+  "backend_version": "0.3.0",
+  "created_at": "2026-11-11T02:54:54.017136637+00:00",
+  "num_public_inputs": 1,
+  "num_constraints": 8310,
+  "deterministic_rng_seed": 0,
+  "ptau_source": null,
+  "phase2_seed_hash": null,
+  "r1cs_form": "reduced",
+  "qap_domain_size": 16384
+}

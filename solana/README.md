@@ -1,6 +1,6 @@
 # Zolius Solana programs
 
-This directory contains work in progress, not a deployed or production-ready release.
+This directory contains experimental Devnet programs and clients, not a production-ready release.
 
 - `lock-circuits`: proposed create, beneficiary claim and optional creator cancellation circuits.
 - `lock-program`: proposed on-chain verifier, time checks and Privacy Rings CPI.
@@ -12,8 +12,10 @@ This directory contains work in progress, not a deployed or production-ready rel
 - `policy`: host-only boundary tests; these checks do not replace the proof or program.
 - `RESEARCH.md`: SDK revision and protocol notes.
 
-Both program IDs in source are development IDs. The corresponding local development keypairs are stored outside this workspace under the WSL user's `~/.config/zolius-dev/`; they have not been deployed. Never commit those keypairs.
+The Lock and Swap IDs in source were observed as executable Devnet programs through the configured RPC on 2026-11-11. That account check does not prove the deployed binaries match this checkout. Do not treat these Devnet programs as Mainnet deployments.
 
 Both SBF programs build with the development test verifiers. All six application proofs have passed generated-verifier checks. Lock deposit/create/CPI/claim and Swap deposit/make/index/recover/take/CPI have passed isolated localnet flows against Helius Privacy Rings. Test setup keys generated with `zolana zk compile --test` are publicly reproducible and cannot protect real funds.
+
+The web app connects Privacy Rings deposit, private transfer, withdrawal, balances and history, and generates Lock create/beneficiary-claim plus fixed-price OTC make/take proofs in the browser. Quantum Vault provides encrypted local backup files, expiring history shares, and encrypted transaction notes. Browser circuit proving keys are shipped as static assets and use the development test verifier setup, so these Lock/Swap flows are Devnet experiments only. Browser cancellation of creator locks and maker orders is not exposed; use the Rust client preparation flows only for local development.
 
 Lock and Swap outputs are encrypted for their recipients. The Lock creator and Swap maker must preserve the prepared output opening and confirmed tree location securely to recover their optional cancellation inputs after restart; app-level encrypted backup/recovery is not implemented yet. Recipient recovery helpers require complete relevant transaction history, including spends.

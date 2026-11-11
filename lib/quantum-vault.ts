@@ -43,6 +43,22 @@ function buffer(bytes: Uint8Array): ArrayBuffer {
   return result;
 }
 
+export function serializeVaultPayload(value: unknown): string {
+  return JSON.stringify(value, (_key, item: unknown) =>
+    typeof item === "bigint" ? { __zoliusBigInt: item.toString() } : item,
+  );
+}
+
+export function parseVaultPayload(value: string): unknown {
+  return JSON.parse(value, (_key, item: unknown) => {
+    if (typeof item === "object" && item !== null && "__zoliusBigInt" in item) {
+      const encoded = (item as { __zoliusBigInt?: unknown }).__zoliusBigInt;
+      if (typeof encoded === "string" && /^-?\d+$/.test(encoded)) return BigInt(encoded);
+    }
+    return item;
+  }) as unknown;
+}
+
 async function deriveKeys(wallet: StoredWallet): Promise<VaultKeys> {
   const provider = detectSolana(wallet.id);
   if (!provider?.signMessage) throw new Error("Reconnect a Solana wallet that supports message signing.");
@@ -117,7 +133,7 @@ export async function encryptForWallet(
     const encrypted = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv: buffer(iv), additionalData: buffer(aad(envelope)), tagLength: 128 },
       key,
-      buffer(encoder.encode(JSON.stringify(payload))),
+      buffer(encoder.encode(serializeVaultPayload(payload))),
     );
     return { ...envelope, encapsulation: toBase64(cipherText), iv: toBase64(iv), ciphertext: toBase64(new Uint8Array(encrypted)) };
   } finally {
@@ -139,9 +155,11 @@ export async function decryptForWallet(wallet: StoredWallet, envelope: VaultEnve
   if (envelope.expiresAt !== null && Date.now() >= envelope.expiresAt) throw new Error("This share has expired.");
 
   const keys = await deriveKeys(wallet);
-  const sharedSecret = ml_kem768_x25519.decapsulate(fromBase64(envelope.encapsulation), keys.secretKey);
+  let sharedSecret: Uint8Array | null = null;
   try {
-    const key = await importAeadKey(sharedSecret);
+    const derivedSecret = ml_kem768_x25519.decapsulate(fromBase64(envelope.encapsulation), keys.secretKey);
+    sharedSecret = derivedSecret;
+    const key = await importAeadKey(derivedSecret);
     const plain = await crypto.subtle.decrypt(
       {
         name: "AES-GCM",
@@ -152,11 +170,11 @@ export async function decryptForWallet(wallet: StoredWallet, envelope: VaultEnve
       key,
       buffer(fromBase64(envelope.ciphertext)),
     );
-    return JSON.parse(new TextDecoder().decode(plain)) as unknown;
+    return parseVaultPayload(new TextDecoder().decode(plain));
   } catch {
     throw new Error("Unable to decrypt: wallet, key, or file does not match.");
   } finally {
-    sharedSecret.fill(0);
+    sharedSecret?.fill(0);
     keys.secretKey.fill(0);
   }
 }

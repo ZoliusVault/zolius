@@ -20,17 +20,27 @@ import {
 } from "lucide-react";
 import { loadWallet, type StoredWallet } from "@/lib/wallets";
 import { WalletModal } from "@/components/WalletModal";
-import { ZkShieldRadar } from "@/components/ZkShieldRadar";
 import { SolanaLogo, SolLogo, UsdcLogo, SplLogo, CertoraLogo, OtterSecLogo, ZkSecurityLogo } from "@/components/TokenLogos";
 import { SolanaProgramStatus } from "@/components/trade/SolanaProgramStatus";
+import { PrivacyRingTelemetry } from "@/components/trade/PrivacyRingTelemetry";
+import { PrivacyAssetsPanel } from "@/components/trade/PrivacyAssetsPanel";
+import { QuantumVaultPanel } from "@/components/trade/QuantumVaultPanel";
 import {
   shieldPrivateAsset,
   readPrivateSolBalance,
   withdrawPrivateAsset,
+  createPrivateLock,
+  createPrivateSwapOrder,
+  claimPrivateLock,
+  takePrivateSwapOrder,
+  readPrivateLocks,
+  readPrivateSwapOrders,
+  type PrivateLockSummary,
+  type PrivateSwapSummary,
   type SyncedSolNote,
 } from "@/lib/helius-spr-browser";
 
-export type AppWorkstationTab = "shield" | "swap" | "lock" | "withdraw" | "vault";
+export type AppWorkstationTab = "assets" | "swap" | "lock" | "vault";
 
 export interface ZkNote {
   id: string;
@@ -59,9 +69,7 @@ function WorkstationContent() {
 
   const tabParam = searchParams.get("tab") as AppWorkstationTab | null;
   const initialTab: AppWorkstationTab =
-    tabParam && ["shield", "swap", "lock", "withdraw", "vault"].includes(tabParam)
-      ? tabParam
-      : "shield";
+    tabParam === "swap" || tabParam === "lock" || tabParam === "vault" ? tabParam : "assets";
 
   const [activeTab, setActiveTab] = useState<AppWorkstationTab>(initialTab);
   const [wallet, setWallet] = useState<StoredWallet | null>(null);
@@ -85,9 +93,15 @@ function WorkstationContent() {
   const [swapFrom, setSwapFrom] = useState<"SOL" | "USDC" | "SPL">("SOL");
   const [swapTo, setSwapTo] = useState<"SOL" | "USDC" | "SPL">("USDC");
   const [swapAmount, setSwapAmount] = useState<string>("2.50");
+  const [swapRequestedAmount, setSwapRequestedAmount] = useState<string>("0.00");
+  const [swapTaker, setSwapTaker] = useState<string>("");
   const [isSwapping, setIsSwapping] = useState<boolean>(false);
   const [swapSuccess, setSwapSuccess] = useState<string | null>(null);
   const [swapError, setSwapError] = useState<string | null>(null);
+  const [swapMakerAddress, setSwapMakerAddress] = useState<string>("");
+  const [privateOrders, setPrivateOrders] = useState<PrivateSwapSummary[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [takingOrderId, setTakingOrderId] = useState<string | null>(null);
 
   // Form states: Lock
   const [lockAsset, setLockAsset] = useState<"SOL" | "USDC" | "SPL">("SOL");
@@ -97,6 +111,10 @@ function WorkstationContent() {
   const [isLocking, setIsLocking] = useState<boolean>(false);
   const [lockSuccess, setLockSuccess] = useState<string | null>(null);
   const [lockError, setLockError] = useState<string | null>(null);
+  const [lockCreatorAddress, setLockCreatorAddress] = useState<string>("");
+  const [privateLocks, setPrivateLocks] = useState<PrivateLockSummary[]>([]);
+  const [isLoadingLocks, setIsLoadingLocks] = useState(false);
+  const [claimingLockId, setClaimingLockId] = useState<string | null>(null);
 
   // Form states: Withdraw
   const [withdrawNoteId, setWithdrawNoteId] = useState<string>("");
@@ -111,9 +129,7 @@ function WorkstationContent() {
   };
 
   useEffect(() => {
-    if (tabParam && ["shield", "swap", "lock", "withdraw", "vault"].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
+    setActiveTab(tabParam === "swap" || tabParam === "lock" || tabParam === "vault" ? tabParam : "assets");
   }, [tabParam]);
 
   useEffect(() => {
@@ -207,16 +223,157 @@ function WorkstationContent() {
     }
   };
 
-  const handleSwapSubmit = (e: React.FormEvent) => {
+  const handleSwapSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSwapSuccess(null);
-    setSwapError("No swap was submitted. The on-chain program is live on Devnet, but its private proof builder is not yet connected to the browser wallet flow.");
+    setSwapError(null);
+    if (!wallet) {
+      setSwapError("Connect a Solana wallet before creating a private OTC order.");
+      setIsWalletModalOpen(true);
+      return;
+    }
+    const assetMint = (asset: "SOL" | "USDC" | "SPL") => asset === "SOL"
+      ? "11111111111111111111111111111111"
+      : asset === "USDC" ? DEVNET_USDC_MINT : splMint.trim();
+    if (swapFrom === swapTo) {
+      setSwapError("Choose two different assets for the OTC pair.");
+      return;
+    }
+    if (!swapTaker.trim()) {
+      setSwapError("Enter the taker’s registered Solana wallet address. OTC orders are private and addressed to one taker.");
+      return;
+    }
+    if (swapFrom === "SPL" && !assetMint(swapFrom) || swapTo === "SPL" && !assetMint(swapTo)) {
+      setSwapError("Enter the SPL or Token-2022 mint before creating this order.");
+      return;
+    }
+    setIsSwapping(true);
+    try {
+      const expiresAt = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
+      const result = await createPrivateSwapOrder(wallet, {
+        offerMint: assetMint(swapFrom),
+        offerAmount: swapAmount,
+        requestMint: assetMint(swapTo),
+        requestAmount: swapRequestedAmount,
+        taker: swapTaker,
+        expiresAt,
+      });
+      setSwapSuccess(`Private OTC order published for the selected taker. Signature: ${result.signature}`);
+    } catch (error) {
+      setSwapError(error instanceof Error ? error.message : "Private OTC order failed.");
+    } finally {
+      setIsSwapping(false);
+    }
   };
 
-  const handleLockSubmit = (e: React.FormEvent) => {
+  const handleLockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLockSuccess(null);
-    setLockError("No lock was submitted. The on-chain program is live on Devnet, but its private proof builder is not yet connected to the browser wallet flow.");
+    setLockError(null);
+    if (!wallet) {
+      setLockError("Connect a Solana wallet before creating a private lock.");
+      setIsWalletModalOpen(true);
+      return;
+    }
+    const mint = lockAsset === "SOL" ? "11111111111111111111111111111111" : lockAsset === "USDC" ? DEVNET_USDC_MINT : splMint.trim();
+    if (!mint) {
+      setLockError("Enter the SPL or Token-2022 mint before creating this lock.");
+      return;
+    }
+    setIsLocking(true);
+    try {
+      const unlockAt = Math.floor(Date.now() / 1000) + lockDays * 24 * 60 * 60;
+      const result = await createPrivateLock(wallet, {
+        mint,
+        amount: lockAmount,
+        beneficiary: lockRecipient.trim(),
+        unlockAt,
+      });
+      setLockCreatorAddress(wallet.address);
+      setLockSuccess(`Private lock created. Beneficiary can claim after ${new Date(result.unlockAt * 1000).toLocaleString()}. Signature: ${result.signature}`);
+    } catch (error) {
+      setLockError(error instanceof Error ? error.message : "Private lock creation failed.");
+    } finally {
+      setIsLocking(false);
+    }
+  };
+
+  const loadBeneficiaryLocks = async () => {
+    if (!wallet) {
+      setIsWalletModalOpen(true);
+      return;
+    }
+    if (!lockCreatorAddress.trim()) {
+      setLockError("Enter the creator wallet address so the app can recover locks addressed to you.");
+      return;
+    }
+    setIsLoadingLocks(true);
+    setLockError(null);
+    try {
+      setPrivateLocks(await readPrivateLocks(wallet, lockCreatorAddress));
+    } catch (error) {
+      setLockError(error instanceof Error ? error.message : "Could not load your private locks.");
+    } finally {
+      setIsLoadingLocks(false);
+    }
+  };
+
+  const claimLock = async (lock: PrivateLockSummary) => {
+    if (!wallet) {
+      setIsWalletModalOpen(true);
+      return;
+    }
+    setClaimingLockId(lock.id);
+    setLockError(null);
+    setLockSuccess(null);
+    try {
+      const result = await claimPrivateLock(wallet, { creator: lock.creator, id: lock.id });
+      setLockSuccess(`Private lock claimed into your shielded balance. Signature: ${result.signature}`);
+      await loadBeneficiaryLocks();
+    } catch (error) {
+      setLockError(error instanceof Error ? error.message : "Private lock claim failed.");
+    } finally {
+      setClaimingLockId(null);
+    }
+  };
+
+  const loadTakerOrders = async () => {
+    if (!wallet) {
+      setIsWalletModalOpen(true);
+      return;
+    }
+    if (!swapMakerAddress.trim()) {
+      setSwapError("Enter the maker wallet address from the private offer.");
+      return;
+    }
+    setIsLoadingOrders(true);
+    setSwapError(null);
+    try {
+      setPrivateOrders(await readPrivateSwapOrders(wallet, swapMakerAddress));
+    } catch (error) {
+      setSwapError(error instanceof Error ? error.message : "Could not load private OTC offers.");
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
+  const takeOrder = async (order: PrivateSwapSummary) => {
+    if (!wallet) {
+      setIsWalletModalOpen(true);
+      return;
+    }
+    setTakingOrderId(order.id);
+    setSwapError(null);
+    setSwapSuccess(null);
+    try {
+      const result = await takePrivateSwapOrder(wallet, { maker: order.maker, id: order.id });
+      setSwapSuccess(`Private OTC swap completed. Signature: ${result.signature}`);
+      await loadTakerOrders();
+    } catch (error) {
+      setSwapError(error instanceof Error ? error.message : "Private OTC swap failed.");
+    } finally {
+      setTakingOrderId(null);
+    }
   };
 
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
@@ -320,7 +477,7 @@ function WorkstationContent() {
               fontWeight: 500,
             }}
           >
-            Shield Terminal
+            {activeTab === "assets" ? "Private Assets & History" : activeTab === "vault" ? "Quantum Vault" : "Shield Terminal"}
           </h1>
           <p
             style={{
@@ -332,7 +489,13 @@ function WorkstationContent() {
               lineHeight: "1.6",
             }}
           >
-            Shielded deposits into Solana Privacy Rings with client-side Groth16 ZK-SNARK proofs and verifiable ML-KEM viewing keys.
+            {activeTab === "assets"
+              ? "Deposit, send, withdraw, and recover private Solana assets from one wallet workspace."
+              : activeTab === "vault"
+                ? "X-Wing encrypted account backups, expiring history shares, and private transaction notes."
+                : activeTab === "swap"
+                  ? "Fixed-price OTC orders settled privately through Solana Privacy Rings."
+                  : "Private escrow with beneficiary claims governed by an on-chain unlock time."}
           </p>
         </div>
 
@@ -364,7 +527,7 @@ function WorkstationContent() {
                 color: "var(--color-muted)",
               }}
             >
-              Audited by
+              Privacy Rings core audited by
             </span>
             <CertoraLogo height={14} />
             <OtterSecLogo height={14} />
@@ -388,17 +551,14 @@ function WorkstationContent() {
             <span style={{ opacity: 0.3 }}>/</span>
             <span>ML-KEM-768</span>
           </div>
-          <a href="/app/assets" className="lp-btn lp-btn--outline" style={{ padding: "7px 10px", fontSize: 11 }}>
-            Open real private assets &amp; history
-          </a>
         </div>
       </div>
 
-      {/* Main 2-Column Workstation Grid: Pro DEX Layout (~58% Terminal : ~42% Sidebar) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+      {/* Workstation tabs share one dashboard and preserve the audit context. */}
+      <div className={`grid grid-cols-1 ${activeTab === "assets" || activeTab === "vault" ? "lg:grid-cols-1" : "lg:grid-cols-12"} gap-6 items-start w-full`}>
         {/* Column 1: Core Trade & Shield Terminal Card (lg:col-span-7) */}
         <div
-          className="lg:col-span-7 veil-card-white p-4 sm:p-6"
+          className={`${activeTab === "assets" || activeTab === "vault" ? "lg:col-span-12" : "lg:col-span-7"} veil-card-white p-4 sm:p-6`}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -444,7 +604,7 @@ function WorkstationContent() {
                 fontSize: "11px",
               }}
             >
-              Manage Notes →
+              Quantum Vault →
             </button>
           </div>
 
@@ -462,11 +622,10 @@ function WorkstationContent() {
             }}
           >
             {[
-              { id: "shield", label: "Shield", icon: ShieldCheck },
-              { id: "swap", label: "ZK Swap", icon: ArrowLeftRight },
-              { id: "lock", label: "Timelock", icon: Lock },
-              { id: "withdraw", label: "Withdraw", icon: ArrowUpRight },
-              { id: "vault", label: `Vault (${activeNotesCount})`, icon: Wallet },
+              { id: "assets", label: "Privacy Rings", icon: ShieldCheck },
+              { id: "swap", label: "Zolius Swap", icon: ArrowLeftRight },
+              { id: "lock", label: "Zolius Lock", icon: Lock },
+              { id: "vault", label: "Quantum Vault", icon: Wallet },
             ].map((tab) => {
               const isSelected = activeTab === tab.id;
               const Icon = tab.icon;
@@ -501,8 +660,11 @@ function WorkstationContent() {
             })}
           </div>
 
+          {activeTab === "assets" && <PrivacyAssetsPanel wallet={wallet} onConnect={() => setIsWalletModalOpen(true)} />}
+          {activeTab === "vault" && <QuantumVaultPanel wallet={wallet} onConnect={() => setIsWalletModalOpen(true)} />}
+
           {/* Tab 1: Shield / Deposit */}
-          {activeTab === "shield" && (
+          {false && (
             <form onSubmit={handleShieldSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
               <div>
                 <h2 style={{ margin: "0 0 4px 0", fontSize: "17px", fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-headline)" }}>
@@ -686,7 +848,7 @@ function WorkstationContent() {
               {/* Memo / Inscription */}
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>
-                  Private Note Tag / Memo (Encrypted with ML-KEM-768)
+                  Public deposit memo (optional)
                 </label>
                 <input
                   type="text"
@@ -774,7 +936,7 @@ function WorkstationContent() {
                   Confidential ZK Swap (CPI)
                 </h2>
                 <p style={{ margin: 0, fontSize: "13px", color: "var(--color-muted)", lineHeight: "1.5" }}>
-                  Atomic Cross-Program Invocation between Solana Privacy Rings and DEX liquidity with zero held custody.
+                  Private fixed-price OTC: make a shielded offer for one registered taker. The asset and amounts stay inside Privacy Rings; counterparties and the maker marker remain public.
                 </p>
               </div>
 
@@ -889,7 +1051,7 @@ function WorkstationContent() {
 
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>
-                  Swap Amount
+                  Amount you offer
                 </label>
                 <div
                   style={{
@@ -933,48 +1095,31 @@ function WorkstationContent() {
                 </div>
               </div>
 
-              <div
-                style={{
-                  padding: "12px 16px",
-                  borderRadius: "var(--radius-sm)",
-                  backgroundColor: "rgba(26, 26, 26, 0.025)",
-                  border: "1px solid var(--color-border)",
-                  fontSize: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  color: "var(--color-muted)",
-                }}
-              >
-                <span>Estimated Output:</span>
-                <span style={{ fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-mono)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                  {swapTo === "USDC" ? (
-                    <UsdcLogo size={15} />
-                  ) : swapTo === "SOL" ? (
-                    <SolLogo size={15} />
-                  ) : (
-                    <SplLogo size={15} />
-                  )}
-                  <span>
-                    {(() => {
-                      if (!swapAmount || Number(swapAmount) <= 0) return "0.00";
-                      let rate = 1;
-                      if (swapFrom === "SOL" && swapTo === "USDC") rate = 150;
-                      else if (swapFrom === "USDC" && swapTo === "SOL") rate = 1 / 150;
-                      else if (swapFrom === "SOL" && swapTo === "SPL") rate = 15000;
-                      else if (swapFrom === "SPL" && swapTo === "SOL") rate = 1 / 15000;
-                      else if (swapFrom === "USDC" && swapTo === "SPL") rate = 100;
-                      else if (swapFrom === "SPL" && swapTo === "USDC") rate = 1 / 100;
-                      return (Number(swapAmount) * rate).toFixed(swapTo === "SPL" ? 0 : 2);
-                    })()}{" "}
-                    {swapTo}
-                  </span>
-                </span>
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>Amount you request</label>
+                <input type="number" step="any" min="0" required value={swapRequestedAmount} onChange={(event) => setSwapRequestedAmount(event.target.value)} placeholder="0.00" style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: "15px" }} />
+              </div>
+
+              {(swapFrom === "SPL" || swapTo === "SPL") && (
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>SPL / Token-2022 mint</label>
+                  <input type="text" value={splMint} onChange={(event) => setSplMint(event.target.value)} placeholder="Devnet token mint address" style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: "13px" }} />
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>Registered taker wallet</label>
+                <input type="text" required value={swapTaker} onChange={(event) => setSwapTaker(event.target.value)} placeholder="Taker’s Solana address (must register first)" style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: "13px" }} />
+              </div>
+
+              <div style={{ padding: "12px 16px", borderRadius: "var(--radius-sm)", backgroundColor: "rgba(26, 26, 26, 0.025)", border: "1px solid var(--color-border)", fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", color: "var(--color-muted)" }}>
+                <span>Order expiry:</span>
+                <strong style={{ fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-mono)" }}>24 hours · private amount · maker/taker public</strong>
               </div>
 
               <button
                 type="submit"
-                disabled={isSwapping || !swapAmount}
+                disabled={isSwapping || !swapAmount || !swapRequestedAmount || !swapTaker}
                 className="lp-btn lp-btn--filled"
                 style={{
                   width: "100%",
@@ -984,7 +1129,7 @@ function WorkstationContent() {
                   cursor: isSwapping ? "wait" : "pointer",
                 }}
               >
-                {isSwapping ? "Executing Confidential CPI Swap..." : `Swap & Reshield to ${swapTo}`}
+                {isSwapping ? "Proving private order & submitting…" : `Create private ${swapFrom} → ${swapTo} offer`}
               </button>
 
               {swapSuccess && (
@@ -1006,6 +1151,28 @@ function WorkstationContent() {
                 </div>
               )}
               {swapError && <div role="alert" style={{ padding: "12px 16px", borderRadius: "var(--radius-sm)", backgroundColor: "rgba(245, 158, 11, 0.09)", border: "1px solid rgba(245, 158, 11, 0.3)", color: "#92400e", fontSize: "13px", display: "flex", alignItems: "center", gap: 8 }}><AlertCircle size={16} />{swapError}</div>}
+
+              <section style={{ marginTop: 10, paddingTop: 18, borderTop: "1px solid var(--color-border)", display: "grid", gap: 12 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 15, fontFamily: "var(--font-headline)" }}>Take a private offer</h3>
+                  <p style={{ margin: "5px 0 0", color: "var(--color-muted)", fontSize: 12, lineHeight: 1.5 }}>Paste the maker address, load offers addressed to this wallet, then pay the exact private amount from one matching note.</p>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <input value={swapMakerAddress} onChange={(event) => setSwapMakerAddress(event.target.value)} placeholder="Maker Solana wallet address" style={{ flex: "1 1 280px", minWidth: 0, padding: "11px 12px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: 12 }} />
+                  <button type="button" className="lp-btn lp-btn--outline" disabled={isLoadingOrders} onClick={() => void loadTakerOrders()}>{isLoadingOrders ? "Loading…" : "Load offers"}</button>
+                </div>
+                {privateOrders.map((order) => (
+                  <div key={order.id} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center", gap: 12, padding: 12, border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)" }}>
+                    <div style={{ minWidth: 0, display: "grid", gap: 5 }}>
+                      <strong style={{ fontSize: 13 }}>{order.offerAmount} offered · {order.requestAmount} requested</strong>
+                      <small style={{ color: "var(--color-muted)", overflowWrap: "anywhere" }}>{order.offerMint} → {order.requestMint}</small>
+                      <small style={{ color: "var(--color-muted)" }}>Expires {new Date(order.expiresAt * 1000).toLocaleString()} · order {order.id.slice(0, 12)}…</small>
+                    </div>
+                    <button type="button" className="lp-btn lp-btn--filled" disabled={takingOrderId !== null || order.expiresAt <= Math.floor(Date.now() / 1000)} onClick={() => void takeOrder(order)}>{takingOrderId === order.id ? "Proving & swapping…" : "Take offer"}</button>
+                  </div>
+                ))}
+                {!isLoadingOrders && privateOrders.length === 0 && <small style={{ color: "var(--color-muted)" }}>No open offers loaded. Connect the wallet that was selected as the taker.</small>}
+              </section>
             </form>
           )}
 
@@ -1018,9 +1185,16 @@ function WorkstationContent() {
                   Confidential Timelock Escrow
                 </h2>
                 <p style={{ margin: 0, fontSize: "13px", color: "var(--color-muted)", lineHeight: "1.5" }}>
-                  Lock shielded assets into a private escrow. Unlocks on a deterministic timestamp with cryptographic nullifier verification.
+                  Lock shielded assets for a registered beneficiary. The asset and amount remain private; the unlock time and wallet signers are public.
                 </p>
               </div>
+
+              {lockAsset === "SPL" && (
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>SPL / Token-2022 mint</label>
+                  <input type="text" value={splMint} onChange={(event) => setSplMint(event.target.value)} placeholder="Devnet token mint address" style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: "13px" }} />
+                </div>
+              )}
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
@@ -1138,7 +1312,7 @@ function WorkstationContent() {
 
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>
-                  Recipient Solana Address (Base58)
+                  Beneficiary Solana address (must register a Privacy Rings wallet)
                 </label>
                 <input
                   type="text"
@@ -1172,7 +1346,7 @@ function WorkstationContent() {
                   cursor: isLocking ? "wait" : "pointer",
                 }}
               >
-                {isLocking ? "Creating Timelock Escrow..." : `Lock ${lockAmount || "0"} ${lockAsset} for ${lockDays} Days`}
+                {isLocking ? "Proving private lock & submitting…" : `Lock ${lockAmount || "0"} ${lockAsset} for ${lockDays} days`}
               </button>
 
               {lockSuccess && (
@@ -1194,11 +1368,32 @@ function WorkstationContent() {
                 </div>
               )}
               {lockError && <div role="alert" style={{ padding: "12px 16px", borderRadius: "var(--radius-sm)", backgroundColor: "rgba(245, 158, 11, 0.09)", border: "1px solid rgba(245, 158, 11, 0.3)", color: "#92400e", fontSize: "13px", display: "flex", alignItems: "center", gap: 8 }}><AlertCircle size={16} />{lockError}</div>}
+
+              <section style={{ marginTop: 10, paddingTop: 18, borderTop: "1px solid var(--color-border)", display: "grid", gap: 12 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 15, fontFamily: "var(--font-headline)" }}>Claim a private lock</h3>
+                  <p style={{ margin: "5px 0 0", color: "var(--color-muted)", fontSize: 12, lineHeight: 1.5 }}>Enter the creator wallet address, recover locks addressed to this wallet, and claim after each public unlock time.</p>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <input value={lockCreatorAddress} onChange={(event) => setLockCreatorAddress(event.target.value)} placeholder="Lock creator Solana wallet address" style={{ flex: "1 1 280px", minWidth: 0, padding: "11px 12px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: 12 }} />
+                  <button type="button" className="lp-btn lp-btn--outline" disabled={isLoadingLocks} onClick={() => void loadBeneficiaryLocks()}>{isLoadingLocks ? "Loading…" : "Load my locks"}</button>
+                </div>
+                {privateLocks.map((lock) => (
+                  <div key={lock.id} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center", gap: 12, padding: 12, border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)" }}>
+                    <div style={{ minWidth: 0, display: "grid", gap: 5 }}>
+                      <strong style={{ fontSize: 13 }}>{lock.amount} · {lock.mint}</strong>
+                      <small style={{ color: "var(--color-muted)" }}>Unlocks {new Date(lock.unlockAt * 1000).toLocaleString()} · lock {lock.id.slice(0, 12)}…</small>
+                    </div>
+                    <button type="button" className="lp-btn lp-btn--filled" disabled={!lock.claimable || claimingLockId !== null} onClick={() => void claimLock(lock)}>{claimingLockId === lock.id ? "Proving claim…" : lock.claimable ? "Claim" : "Locked"}</button>
+                  </div>
+                ))}
+                {!isLoadingLocks && privateLocks.length === 0 && <small style={{ color: "var(--color-muted)" }}>No locks loaded. Connect the wallet registered as a lock beneficiary.</small>}
+              </section>
             </form>
           )}
 
           {/* Tab 4: Withdraw / Decoupled Exit */}
-          {activeTab === "withdraw" && (
+          {false && (
             <form onSubmit={handleWithdrawSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
               <div>
                 <h2 style={{ margin: "0 0 4px 0", fontSize: "17px", fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-headline)" }}>
@@ -1366,7 +1561,7 @@ function WorkstationContent() {
           )}
 
           {/* Tab 5: Quantum Vault Notes Ledger */}
-          {activeTab === "vault" && (
+          {activeTab === "vault" && false && (
             <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
                 <div>
@@ -1518,8 +1713,8 @@ function WorkstationContent() {
           )}
         </div>
 
-        {/* Column 2: Telemetry HUD & Vault Overview (Pro DEX Sidebar) (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col gap-6 w-full">
+        {/* Holdings and audit context stay on this dashboard for the trading tabs. */}
+        {activeTab !== "assets" && activeTab !== "vault" && <div className="lg:col-span-5 flex flex-col gap-6 w-full">
           {/* Quick Balance Overview Card */}
           <div
             style={{
@@ -1607,25 +1802,16 @@ function WorkstationContent() {
             <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
               <button
                 type="button"
-                onClick={() => switchTab("shield")}
+                onClick={() => switchTab("assets")}
                 className="lp-btn lp-btn--outline"
-                style={{ flex: 1, padding: "8px", fontSize: "12px", fontWeight: 600 }}
+                style={{ width: "100%", padding: "8px", fontSize: "12px", fontWeight: 600 }}
               >
-                + Shield Funds
-              </button>
-              <button
-                type="button"
-                onClick={() => switchTab("withdraw")}
-                className="lp-btn lp-btn--outline"
-                style={{ flex: 1, padding: "8px", fontSize: "12px", fontWeight: 600 }}
-              >
-                Withdraw →
+                Open Privacy Rings →
               </button>
             </div>
           </div>
 
-          {/* Real-time Telemetry Radar */}
-          <ZkShieldRadar />
+          <PrivacyRingTelemetry />
 
           {/* Core Security & Protocol Audit Trust Card (Veil Style) */}
           <div
@@ -1645,7 +1831,7 @@ function WorkstationContent() {
                 Audited Protocols &amp; Security
               </span>
               <span style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "#059669", fontWeight: 700, backgroundColor: "rgba(16, 185, 129, 0.08)", padding: "2px 6px", borderRadius: "4px" }}>
-                ON-CHAIN VERIFIED
+                PRIVACY RINGS CORE
               </span>
             </div>
 
@@ -1695,10 +1881,10 @@ function WorkstationContent() {
               • <strong>Zero Held-Custody:</strong> CPI instructions settle directly between caller and liquidity pool with zero intermediary holding.
             </div>
             <div style={{ fontSize: "12.5px", color: "var(--color-muted)", lineHeight: "1.55" }}>
-              • <strong>Quantum Viewing Keys:</strong> ML-KEM-768 lattice encryption prevents retrospective viewing note decryption by quantum computers.
+              • <strong>Quantum Vault:</strong> X-Wing (X25519 + ML-KEM-768) protects off-chain backups, shares, and notes. Privacy Rings Groth16 proofs are not post-quantum.
             </div>
           </div>
-        </div>
+        </div>}
       </div>
 
       {/* Wallet Modal */}

@@ -1,6 +1,6 @@
 # Development instruction interface
 
-This describes the current experimental Rust programs. It is not a stable public SDK, and the listed development program IDs have not been deployed. Generated verifying keys are for local test proofs only.
+This describes the current experimental Rust programs. It is not a stable public SDK. The listed program addresses were observed as executable on Devnet on 2026-11-11; the deployed binary was not compared against this checkout. Generated verifying keys are for local test proofs only.
 
 Each instruction is a one-byte tag, followed by its `wincode`-encoded argument struct and the complete serialized Privacy Rings `TransactIxData`. The application proof has three compressed components: `a: [u8; 32]`, `b: [u8; 64]`, `c: [u8; 32]`. Use the Rust types and serializer as the source of truth; do not infer variable-length SPP encoding from this table.
 

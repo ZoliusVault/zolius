@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import { QuantumVaultPanel } from "@/components/trade/QuantumVaultPanel";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Quantum Vault | Zolius Vault",
-  description: "X-Wing encrypted Solana account backups, expiring viewing shares, and private transaction notes.",
-};
-
-export default function VaultPage() {
-  return <QuantumVaultPanel />;
+export default function QuantumVaultAliasPage() {
+  redirect("/app?tab=vault");
 }

@@ -1,0 +1,270 @@
+{
+  "version": 2,
+  "xark": "0.3.1",
+  "circuit": "cancel_order",
+  "inputs": [
+    {
+      "name": "program",
+      "visibility": "private",
+      "type": {
+        "ref": "CancelOrder"
+      }
+    },
+    {
+      "name": "public_hash",
+      "visibility": "public",
+      "type": "field"
+    }
+  ],
+  "types": {
+    "CancelOrder": {
+      "struct": [
+        {
+          "name": "private",
+          "type": {
+            "ref": "CancelPrivate"
+          }
+        },
+        {
+          "name": "public",
+          "type": {
+            "ref": "CancelPublic"
+          }
+        }
+      ]
+    },
+    "CancelPrivate": {
+      "struct": [
+        {
+          "name": "tx_context",
+          "type": {
+            "ref": "TxContext"
+          }
+        },
+        {
+          "name": "order",
+          "type": {
+            "ref": "Utxo"
+          }
+        },
+        {
+          "name": "terms",
+          "type": {
+            "ref": "OrderTerms"
+          }
+        }
+      ]
+    },
+    "CancelPublic": {
+      "struct": [
+        {
+          "name": "maker_identity",
+          "type": "field"
+        }
+      ]
+    },
+    "OrderTerms": {
+      "struct": [
+        {
+          "name": "maker",
+          "type": {
+            "ref": "UtxoOwner"
+          }
+        },
+        {
+          "name": "requested_mint",
+          "type": {
+            "array": {
+              "of": {
+                "uint": 8
+              },
+              "len": 32
+            }
+          }
+        },
+        {
+          "name": "requested_amount",
+          "type": {
+            "uint": 64
+          },
+          "packed": {
+            "offset": 0,
+            "bits": 64
+          }
+        },
+        {
+          "name": "expiry",
+          "type": {
+            "uint": 64
+          },
+          "packed": {
+            "offset": 64,
+            "bits": 64
+          }
+        },
+        {
+          "name": "taker_identity",
+          "type": {
+            "array": {
+              "of": {
+                "uint": 8
+              },
+              "len": 32
+            }
+          }
+        }
+      ]
+    },
+    "SigningPubkey": {
+      "struct": [
+        {
+          "name": "tag",
+          "type": {
+            "uint": 8
+          }
+        },
+        {
+          "name": "bytes",
+          "type": {
+            "array": {
+              "of": {
+                "uint": 8
+              },
+              "len": 32
+            }
+          }
+        }
+      ]
+    },
+    "TxContext": {
+      "struct": [
+        {
+          "name": "blinding_seed",
+          "type": "field"
+        },
+        {
+          "name": "output_tree_id",
+          "type": {
+            "uint": 16
+          },
+          "packed": {
+            "offset": 0,
+            "bits": 16
+          }
+        },
+        {
+          "name": "uses_output_tree_id",
+          "type": "bool",
+          "packed": {
+            "offset": 16,
+            "bits": 1
+          }
+        }
+      ]
+    },
+    "Utxo": {
+      "struct": [
+        {
+          "name": "domain",
+          "type": {
+            "uint": 16
+          }
+        },
+        {
+          "name": "owner",
+          "type": {
+            "ref": "UtxoOwner"
+          }
+        },
+        {
+          "name": "asset",
+          "type": {
+            "array": {
+              "of": {
+                "uint": 8
+              },
+              "len": 32
+            }
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "uint": 64
+          }
+        },
+        {
+          "name": "blinding",
+          "type": "field"
+        },
+        {
+          "name": "data_hash",
+          "type": "field"
+        },
+        {
+          "name": "ring_data_hash",
+          "type": "field"
+        },
+        {
+          "name": "ring_program_id",
+          "type": "field"
+        },
+        {
+          "name": "tree_id",
+          "type": {
+            "uint": 16
+          }
+        },
+        {
+          "name": "meta",
+          "type": {
+            "ref": "UtxoMeta"
+          }
+        }
+      ]
+    },
+    "UtxoMeta": {
+      "struct": [
+        {
+          "name": "nullifier",
+          "type": "field"
+        },
+        {
+          "name": "latest_tree_id",
+          "type": {
+            "uint": 16
+          },
+          "packed": {
+            "offset": 0,
+            "bits": 16
+          }
+        },
+        {
+          "name": "has_latest_tree_id",
+          "type": "bool",
+          "packed": {
+            "offset": 16,
+            "bits": 1
+          }
+        }
+      ]
+    },
+    "UtxoOwner": {
+      "struct": [
+        {
+          "name": "key",
+          "type": {
+            "ref": "SigningPubkey"
+          }
+        },
+        {
+          "name": "nullifier_pk",
+          "type": "field"
+        }
+      ]
+    }
+  },
+  "public_inputs": [
+    "public_hash"
+  ]
+}

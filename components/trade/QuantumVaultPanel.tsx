@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState, type ChangeEvent } from "react";
 import { Copy, Download, FileLock2, KeyRound, LockKeyhole, Plus, ShieldCheck, Trash2, Upload } from "lucide-react";
-import { WalletModal } from "@/components/WalletModal";
-import { detectSolana, loadWallet, type StoredWallet } from "@/lib/wallets";
+import { detectSolana, type StoredWallet } from "@/lib/wallets";
 import {
   decryptForWallet,
   encryptForWallet,
   getVaultPublicKey,
+  serializeVaultPayload,
   type VaultEnvelope,
 } from "@/lib/quantum-vault";
-import { readPrivatePortfolio } from "@/lib/helius-spr-browser";
+import { readPrivateVaultAccess } from "@/lib/helius-spr-browser";
 
 type SavedNote = { id: string; envelope: VaultEnvelope };
 type SavedShare = { id: string; recipient: string; expiresAt: number; envelope: VaultEnvelope };
@@ -34,6 +34,13 @@ function readList<T>(key: string): T[] {
   }
 }
 
+async function readEnvelope(file: File): Promise<VaultEnvelope> {
+  if (file.size > 8 * 1024 * 1024) throw new Error("Quantum Vault files are limited to 8 MB.");
+  const value = JSON.parse(await file.text()) as VaultEnvelope;
+  if (!value || typeof value !== "object") throw new Error("Invalid Quantum Vault file.");
+  return value;
+}
+
 const box: React.CSSProperties = {
   border: "1px solid var(--color-border)",
   borderRadius: "var(--radius-lg)",
@@ -53,9 +60,7 @@ const input: React.CSSProperties = {
   color: "var(--color-text)",
 };
 
-export function QuantumVaultPanel() {
-  const [wallet, setWallet] = useState<StoredWallet | null>(null);
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
+export function QuantumVaultPanel({ wallet, onConnect }: { wallet: StoredWallet | null; onConnect: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -68,8 +73,12 @@ export function QuantumVaultPanel() {
   const [recipientKey, setRecipientKey] = useState("");
   const [shareHours, setShareHours] = useState("24");
   const [restoreResult, setRestoreResult] = useState<string | null>(null);
+  const [openedShare, setOpenedShare] = useState<{
+    viewingKey?: string;
+    history?: Array<{ signature: string; kind: string; direction: string; amount: bigint; decimals: number }>;
+    balances?: Array<{ mint: string; amount: string | bigint; decimals: number }>;
+  } | null>(null);
 
-  useEffect(() => setWallet(loadWallet()), []);
   useEffect(() => {
     if (!wallet) return;
     setNotes(readList<SavedNote>(`zolius:vault:notes:${wallet.address}`));
@@ -111,14 +120,14 @@ export function QuantumVaultPanel() {
 
   async function createBackup() {
     if (!wallet) throw new Error("Connect a Solana wallet first.");
-    const portfolio = await readPrivatePortfolio(wallet);
+    const access = await readPrivateVaultAccess(wallet);
     const envelope = await encryptForWallet(
       wallet,
-      { format: "zolius-vault-backup-v1", wallet: wallet.address, exportedAt: new Date().toISOString(), portfolio },
+      { format: "zolius-vault-backup-v1", wallet: wallet.address, exportedAt: new Date().toISOString(), ...access },
       "backup",
     );
     downloadJson(`zolius-vault-${wallet.address.slice(0, 6)}.json`, envelope);
-    setMessage("Encrypted backup downloaded. Restore it with the same wallet on another device.");
+    setMessage("Encrypted backup downloaded with your Privacy Rings viewing key and account snapshot. Restore it with the same wallet on another device.");
   }
 
   async function restoreBackup(event: ChangeEvent<HTMLInputElement>) {
@@ -126,10 +135,12 @@ export function QuantumVaultPanel() {
     const file = event.target.files?.[0];
     if (!file) return;
     await perform(async () => {
-      const envelope = JSON.parse(await file.text()) as VaultEnvelope;
-      const restored = (await decryptForWallet(wallet, envelope)) as { format?: string; portfolio?: unknown };
+      const envelope = await readEnvelope(file);
+      const restored = (await decryptForWallet(wallet, envelope)) as { format?: string; viewingKey?: string; portfolio?: unknown };
       if (restored.format !== "zolius-vault-backup-v1") throw new Error("This file is not a Zolius Vault backup.");
-      localStorage.setItem(`zolius:vault:restore:${wallet.address}`, JSON.stringify(restored));
+      const current = await readPrivateVaultAccess(wallet);
+      if (!restored.viewingKey || restored.viewingKey !== current.viewingKey) throw new Error("The backup viewing key does not match this connected wallet.");
+      localStorage.setItem(`zolius:vault:restore:${wallet.address}`, serializeVaultPayload({ format: restored.format, portfolio: restored.portfolio }));
       setRestoreResult("Backup decrypted successfully. Your private account history can be re-synced from Privacy Rings.");
     });
     event.target.value = "";
@@ -163,10 +174,10 @@ export function QuantumVaultPanel() {
     const hours = Number(shareHours);
     if (!Number.isFinite(hours) || hours < 1 || hours > 8760) throw new Error("Choose an expiration between 1 hour and 365 days.");
     const expiresAt = Date.now() + hours * 60 * 60 * 1000;
-    const portfolio = await readPrivatePortfolio(wallet);
+    const access = await readPrivateVaultAccess(wallet);
     const envelope = await encryptForWallet(
       wallet,
-      { format: "zolius-view-share-v1", history: portfolio.history, balances: portfolio.balances.map(({ mint, amount, decimals }) => ({ mint, amount: String(amount), decimals })) },
+      { format: "zolius-view-share-v1", viewingKey: access.viewingKey, history: access.portfolio.history, balances: access.portfolio.balances.map(({ mint, amount, decimals }) => ({ mint, amount: String(amount), decimals })) },
       "share",
       recipientKey,
       recipientAddress.trim(),
@@ -174,7 +185,7 @@ export function QuantumVaultPanel() {
     );
     downloadJson(`zolius-view-share-${recipientAddress.slice(0, 6)}.json`, envelope);
     persistShares([{ id: crypto.randomUUID(), recipient: recipientAddress.trim(), expiresAt, envelope }, ...shares]);
-    setMessage("Encrypted viewing file created for the recipient. Only they can open it with their wallet.");
+    setMessage("Encrypted viewing file created with your viewing key and current private history snapshot. Only the recipient can open it with their wallet.");
   }
 
   async function importShare(event: ChangeEvent<HTMLInputElement>) {
@@ -182,10 +193,12 @@ export function QuantumVaultPanel() {
     const file = event.target.files?.[0];
     if (!file) return;
     await perform(async () => {
-      const envelope = JSON.parse(await file.text()) as VaultEnvelope;
+      const envelope = await readEnvelope(file);
       if (envelope.purpose !== "share") throw new Error("This file is not a viewing share.");
-      const value = (await decryptForWallet(wallet, envelope)) as { history?: unknown[]; balances?: unknown[] };
-      setRestoreResult(`Viewing share opened: ${value.history?.length ?? 0} history entries and ${value.balances?.length ?? 0} private asset balances.`);
+      const value = (await decryptForWallet(wallet, envelope)) as NonNullable<typeof openedShare>;
+      if (typeof value.viewingKey !== "string" || !/^[0-9a-f]{64}$/.test(value.viewingKey)) throw new Error("This share does not contain a valid Privacy Rings viewing key.");
+      setOpenedShare(value);
+      setRestoreResult(`Viewing share opened with its encrypted viewing key: ${value.history?.length ?? 0} history entries and ${value.balances?.length ?? 0} private asset balances.`);
     });
     event.target.value = "";
   }
@@ -196,20 +209,20 @@ export function QuantumVaultPanel() {
   }
 
   return (
-    <main style={{ maxWidth: 1120, margin: "0 auto", padding: "36px 24px 80px", display: "grid", gap: 20 }}>
+    <section style={{ display: "grid", gap: 20 }}>
       <header style={{ borderBottom: "1px solid var(--color-border)", paddingBottom: 22 }}>
         <div style={{ display: "inline-flex", gap: 8, alignItems: "center", color: "var(--color-accent-ink)", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase" }}>
           <ShieldCheck size={15} /> Quantum Vault // X-Wing + AES-256-GCM
         </div>
-        <h1 style={{ margin: "10px 0 6px", fontFamily: "var(--font-headline)", fontSize: "clamp(30px, 4vw, 44px)", fontWeight: 500 }}>Your keys. Your quantum vault.</h1>
-        <p style={{ margin: 0, color: "var(--color-muted)", maxWidth: 760, lineHeight: 1.65 }}>Client-side encrypted backups, expiring viewing shares, and private transaction notes. Vault access is derived from a wallet signature over <code>ZOLIUS/vault/v1</code>.</p>
+        <h2 style={{ margin: "10px 0 6px", fontFamily: "var(--font-headline)", fontSize: 22, fontWeight: 600 }}>Your keys. Your quantum vault.</h2>
+        <p style={{ margin: 0, color: "var(--color-muted)", maxWidth: 760, lineHeight: 1.65 }}>Encrypted backups, expiring history shares, and private transaction notes. Vault access is derived from a wallet signature over <code>ZOLIUS/vault/v1</code>.</p>
       </header>
 
       {!wallet ? (
         <section style={box}>
           <h2 style={{ marginTop: 0 }}>Connect your wallet</h2>
           <p style={{ color: "var(--color-muted)" }}>The connected wallet derives your X-Wing key pair locally; private key material is not sent to a server.</p>
-          <button className="lp-btn lp-btn--filled" onClick={() => setWalletModalOpen(true)}>Connect Solana wallet</button>
+          <button className="lp-btn lp-btn--filled" onClick={onConnect}>Connect Solana wallet</button>
         </section>
       ) : (
         <>
@@ -241,6 +254,12 @@ export function QuantumVaultPanel() {
             </section>
           </div>
 
+          {openedShare && <section style={box}>
+            <h2 style={{ marginTop: 0 }}>Decrypted read-only snapshot</h2>
+            {(openedShare.balances || []).map((balance, index) => <div key={`${balance.mint}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, borderTop: "1px solid var(--color-border)", padding: "9px 0", fontSize: 12 }}><code>{balance.mint}</code><strong>{String(balance.amount)} base units · {balance.decimals} decimals</strong></div>)}
+            {(openedShare.history || []).map((row, index) => <div key={`${row.signature}-${index}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.4fr", gap: 12, borderTop: "1px solid var(--color-border)", padding: "10px 0", fontSize: 12 }}><span>{row.kind} · {row.direction}</span><strong>{String(row.amount)} base units · {row.decimals} decimals</strong><a href={`https://explorer.solana.com/tx/${row.signature}?cluster=devnet`} target="_blank" rel="noreferrer" style={{ color: "var(--color-accent-ink)" }}>View transaction</a></div>)}
+          </section>}
+
           <section style={{ ...box, display: "grid", gap: 12 }}>
             <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: 9 }}><LockKeyhole size={19} /> Encrypted transaction notes</h2>
             <p style={{ margin: 0, color: "var(--color-muted)" }}>Attach labels, invoice references, or accounting notes to a transaction signature. Notes are encrypted before local storage.</p>
@@ -253,7 +272,6 @@ export function QuantumVaultPanel() {
 
       {(error || message || restoreResult) && <div role={error ? "alert" : "status"} style={{ ...box, borderColor: error ? "var(--color-danger-border)" : "rgba(22, 163, 74, .25)", color: error ? "var(--color-danger-ink)" : "var(--color-text)" }}>{error || restoreResult || message}</div>}
       {busy && <div style={{ color: "var(--color-muted)", fontSize: 13 }}>Waiting for wallet signature and encrypting locally…</div>}
-      <WalletModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} onPick={(id, address) => setWallet({ id, address })} ariaLabel="Connect to Quantum Vault" />
-    </main>
+    </section>
   );
 }

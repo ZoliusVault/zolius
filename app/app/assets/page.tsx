@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import { PrivacyAssetsPanel } from "@/components/trade/PrivacyAssetsPanel";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Private Assets & History | Zolius Vault",
-  description: "Deposit, privately send, withdraw, and recover Solana Privacy Rings assets and history.",
-};
-
-export default function PrivateAssetsPage() {
-  return <PrivacyAssetsPanel />;
+export default function PrivateAssetsAliasPage() {
+  redirect("/app?tab=assets");
 }

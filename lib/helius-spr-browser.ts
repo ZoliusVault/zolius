@@ -19,11 +19,28 @@ import {
   type Signature,
 } from "@heliuslabs/spr";
 import { isWalletRegistered } from "@heliuslabs/spr/wallet";
+import { resolveRegisteredAddress } from "@heliuslabs/spr/wallet";
 import { ed25519DerivationMessage } from "@heliuslabs/spr/keypair";
+import { ViewingKey, solanaOwnerIdentity } from "@heliuslabs/spr/keypair";
+import { Mint } from "@heliuslabs/spr/transaction";
+import { EncryptedScheme, TransactionError, decodeConfidential, decodeOutputData } from "@heliuslabs/spr/transaction";
+import { bindProgramTransaction, ProgramOwner, toProgramWalletUtxo, transactCpiAccounts } from "@heliuslabs/spr/program";
+import { encodeTransactInstructionData } from "@heliuslabs/spr/interface";
+import { treeAddress } from "@heliuslabs/spr/internal";
 import { SignedTeePolicy } from "@heliuslabs/spr/client";
-import { getBase64EncodedWireTransaction } from "@solana/kit";
+import {
+  AccountRole,
+  address,
+  appendTransactionMessageInstructions,
+  createTransactionMessage,
+  compileTransaction,
+  getBase64EncodedWireTransaction,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+} from "@solana/kit";
 import { PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { detectSolana, type SolanaWalletId, type StoredWallet } from "@/lib/wallets";
+import { lockCreate, lockRelease, swapMake, swapTake } from "../solana/ts/wire.mjs";
 
 const INDEXER_URL =
   process.env.NEXT_PUBLIC_SOLANA_INDEXER_URL || "https://d34xe1hqb2ibg2.cloudfront.net";
@@ -35,9 +52,40 @@ type SprSession = {
   client: Awaited<ReturnType<typeof createSprClient>>;
   wallet: Wallet;
   keys: LocalKeys;
+  viewingKey: ViewingKey;
   address: string;
   walletId: SolanaWalletId;
 };
+
+type ZkProgramKind = "lock" | "swap";
+type ZkProgramModule = {
+  default: (input?: { module_or_path?: URL }) => Promise<unknown>;
+  ProvingSession: new (circuit: Uint8Array, provingKey: Uint8Array, sources?: string | null) => {
+    prove(inputs: unknown, options: unknown): { proof: Uint8Array; publicInputs: Uint8Array; free(): void };
+    free(): void;
+  };
+  VerifyingKey: new (bytes: Uint8Array) => { verify(proof: Uint8Array, inputs: Uint8Array): boolean; free(): void };
+  programProof(proof: Uint8Array, inputs: Uint8Array, expectedHash: Uint8Array): { compressedProof: { a: Uint8Array; b: Uint8Array; c: Uint8Array }; publicInputs: Uint8Array[] };
+  createLockTransaction?: (inputs: unknown, sender: Uint8Array, payer: string) => ProgramTransactionLike;
+  claimLockTransaction?: (inputs: unknown, sender: Uint8Array, payer: string) => ProgramTransactionLike;
+  makeOrderTransaction?: (inputs: unknown, sender: Uint8Array, payer: string) => ProgramTransactionLike;
+  takeOrderTransaction?: (inputs: unknown, sender: Uint8Array, payer: string) => ProgramTransactionLike;
+  lockTermsDataUtxo?: (utxo: unknown) => unknown;
+  orderTermsDataUtxo?: (utxo: unknown) => unknown;
+};
+type ProgramTransactionLike = {
+  transaction: {
+    inputs: readonly { treeId: number }[];
+    outputTreeId: number;
+    encryptWithKeys(keys: ViewingKey): Parameters<Awaited<ReturnType<typeof createSprClient>>["proveTransact"]>[0];
+  };
+  proofInputs: Uint8Array;
+  publicHash: Uint8Array;
+};
+
+const LOCK_PROGRAM_ID = (process.env.NEXT_PUBLIC_SOLANA_LOCK_PROGRAM_ID || "AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP") as Address;
+const SWAP_PROGRAM_ID = (process.env.NEXT_PUBLIC_SOLANA_SWAP_PROGRAM_ID || "HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u") as Address;
+const dynamicImport = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<ZkProgramModule>;
 
 export type SyncedSolNote = {
   id: string;
@@ -136,7 +184,23 @@ export async function readPrivatePortfolio(stored: StoredWallet): Promise<Privat
     await syncSession(session);
     return await portfolioForSession(session);
   } finally {
-    session.keys.destroy();
+    destroySession(session);
+  }
+}
+
+export async function readPrivateVaultAccess(stored: StoredWallet): Promise<{
+  portfolio: PrivatePortfolio;
+  viewingKey: string;
+}> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    return {
+      portfolio: await portfolioForSession(session),
+      viewingKey: toHex(session.viewingKey.secretBytes()),
+    };
+  } finally {
+    destroySession(session);
   }
 }
 
@@ -165,7 +229,7 @@ export async function shieldPrivateAsset(
     });
     return await syncAndConfirmPrivateTransaction(session, transaction);
   } finally {
-    session.keys.destroy();
+    destroySession(session);
   }
 }
 
@@ -197,7 +261,7 @@ export async function transferPrivateAsset(
     });
     return await syncAndConfirmPrivateTransaction(session, transaction);
   } finally {
-    session.keys.destroy();
+    destroySession(session);
   }
 }
 
@@ -229,7 +293,387 @@ export async function withdrawPrivateAsset(
     });
     return await syncAndConfirmPrivateTransaction(session, transaction);
   } finally {
-    session.keys.destroy();
+    destroySession(session);
+  }
+}
+
+function amountForMint(amountText: string, decimals: number): bigint {
+  return parseTokenAmount(amountText, decimals);
+}
+
+function signerIdentity(addressValue: string): { bytes: Uint8Array; field: string } {
+  const bytes = solanaOwnerIdentity(new PublicKey(addressValue).toBytes());
+  return { bytes, field: BigInt(`0x${toHex(bytes)}`).toString() };
+}
+
+function spendableProgramInput(session: SprSession, mint: string, amount: bigint, exact = false) {
+  const entry = session.wallet.utxos().find(
+    (candidate) => !candidate.spent && candidate.utxo.asset === mint && (exact ? candidate.utxo.amount === amount : candidate.utxo.amount >= amount),
+  );
+  if (!entry) throw new Error(exact ? "No spendable note exactly matches the OTC requested amount. Split or merge private notes to match the maker’s terms." : "No single spendable private note covers this amount. Deposit or merge notes first.");
+  return toProgramWalletUtxo(entry, {
+    nullifierPublicKey: session.wallet.identity.nullifierPublicKey,
+    treeId: session.client.treeId,
+    assets: session.wallet.registry,
+  });
+}
+
+type RecoveredProgramOutput = {
+  id: string;
+  utxo: Record<string, any>;
+  data: Record<string, any>;
+  amount: bigint;
+  mint: string;
+};
+
+async function recoverProgramOutputs(
+  session: SprSession,
+  creatorValue: string,
+  kind: "lock" | "swap",
+): Promise<RecoveredProgramOutput[]> {
+  const creator = new PublicKey(creatorValue.trim()).toBase58() as Address;
+  const program = kind === "lock" ? LOCK_PROGRAM_ID : SWAP_PROGRAM_ID;
+  const seed = kind === "lock" ? "zolius_lock" : "zolius_order";
+  const authority = await ProgramOwner.find([seed, new PublicKey(creator).toBytes()], program);
+  const module = await loadProgramWasm(kind);
+  const convert = kind === "lock" ? module.lockTermsDataUtxo : module.orderTermsDataUtxo;
+  if (!convert) throw new Error(`The ${kind} recovery helper is missing from the generated WASM module.`);
+  const response = await session.client.getShieldedTransactionsByTags({
+    tags: [session.wallet.identity.confidentialViewTag(), authority.ownerTag()],
+    limit: 100,
+  });
+  const transactions = response.data.flatMap((item) => item.events);
+  const spent = new Set(transactions.flatMap((transaction) => transaction.nullifiers.map(toHex)));
+  const recipientKey = session.viewingKey.publicKey().toBytes();
+  const owner = authority.publicKey().toBytes();
+  const nullifierPubkey = ProgramOwner.nullifierPublicKey();
+  const nullifierKey = ProgramOwner.nullifierKey();
+  const outputs = new Map<string, RecoveredProgramOutput>();
+  try {
+    for (const transaction of transactions) {
+      const { txViewingPublicKey, salt } = transaction;
+      if (!txViewingPublicKey || !salt) continue;
+      transaction.outputSlots.forEach((slot, slotIndex) => {
+        if (toHex(slot.viewTag) !== toHex(authority.ownerTag())) return;
+        let frame: ReturnType<typeof decodeOutputData>;
+        try {
+          frame = decodeOutputData(slot.payload);
+        } catch (error) {
+          if (error instanceof TransactionError && ["TRANSACTION_DESERIALIZE", "TRANSACTION_TRAILING_BYTES", "TRANSACTION_BAD_DISCRIMINATOR", "TRANSACTION_INVALID_LENGTH"].includes(error.code)) return;
+          throw error;
+        }
+        if (frame.encoding !== "encrypted" || frame.scheme !== EncryptedScheme.confidential) return;
+        if (toHex(frame.body.slice(0, recipientKey.length)) !== toHex(recipientKey)) return;
+        let plaintext;
+        try {
+          plaintext = decodeConfidential(session.viewingKey.decryptUtxo(frame.body.slice(recipientKey.length), txViewingPublicKey, salt, slotIndex));
+        } catch {
+          return;
+        }
+        const utxoHash = slot.outputContext.hash;
+        const candidate = {
+          utxo: {
+            owner,
+            asset: { asset: session.wallet.registry.resolve(plaintext.assetId), assetId: plaintext.assetId },
+            amount: plaintext.amount,
+            blinding: plaintext.blinding,
+            data: { records: [...plaintext.data.records()] },
+          },
+          nullifierPubkey,
+          utxoHash,
+          nullifier: nullifierKey.nullifier(utxoHash, plaintext.blinding),
+          treeId: session.client.treeId,
+          leafIndex: slot.outputContext.leafIndex,
+        };
+        const recovered = convert(candidate) as { utxo: { utxoHash: Uint8Array; nullifier: Uint8Array; utxo: { amount: bigint; asset: { asset: string } } }; data: Record<string, any> };
+        const id = toHex(recovered.utxo.utxoHash);
+        if (spent.has(toHex(recovered.utxo.nullifier))) return;
+        outputs.set(id, {
+          id,
+          utxo: recovered.utxo as unknown as Record<string, any>,
+          data: recovered.data,
+          amount: recovered.utxo.utxo.amount,
+          mint: recovered.utxo.utxo.asset.asset,
+        });
+      });
+    }
+  } finally {
+    nullifierKey.destroy();
+  }
+  return [...outputs.values()];
+}
+
+export type PrivateLockSummary = { id: string; creator: string; mint: string; amount: string; unlockAt: number; claimable: boolean };
+export type PrivateSwapSummary = { id: string; maker: string; offerMint: string; offerAmount: string; requestMint: string; requestAmount: string; expiresAt: number };
+
+export async function readPrivateLocks(stored: StoredWallet, creator: string): Promise<PrivateLockSummary[]> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const outputs = await recoverProgramOutputs(session, creator, "lock");
+    const metadata = new AssetMetadataCache(session.client);
+    return await Promise.all(outputs.map(async (output) => {
+      const details = await metadata.get(output.mint as Address);
+      return {
+        id: output.id,
+        creator: new PublicKey(creator.trim()).toBase58(),
+        mint: output.mint,
+        amount: formatTokenAmount(output.amount, details.decimals),
+        unlockAt: Number(output.data.unlock),
+        claimable: Number(output.data.unlock) <= Math.floor(Date.now() / 1000),
+      };
+    }));
+  } finally {
+    destroySession(session);
+  }
+}
+
+export async function readPrivateSwapOrders(stored: StoredWallet, maker: string): Promise<PrivateSwapSummary[]> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const outputs = await recoverProgramOutputs(session, maker, "swap");
+    const metadata = new AssetMetadataCache(session.client);
+    return await Promise.all(outputs.map(async (output) => {
+      const requestedMint = String(output.data.requestedMint.asset);
+      const [offerDetails, requestDetails] = await Promise.all([
+        metadata.get(output.mint as Address),
+        metadata.get(requestedMint as Address),
+      ]);
+      return {
+        id: output.id,
+        maker: new PublicKey(maker.trim()).toBase58(),
+        offerMint: output.mint,
+        offerAmount: formatTokenAmount(output.amount, offerDetails.decimals),
+        requestMint: requestedMint,
+        requestAmount: formatTokenAmount(BigInt(output.data.requestedAmount), requestDetails.decimals),
+        expiresAt: Number(output.data.expiry),
+      };
+    }));
+  } finally {
+    destroySession(session);
+  }
+}
+
+export async function createPrivateLock(
+  stored: StoredWallet,
+  input: { mint: string; amount: string; beneficiary: string; unlockAt: number; cancelable?: boolean },
+): Promise<{ signature: string; unlockAt: number }> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const beneficiary = new PublicKey(input.beneficiary.trim()).toBase58() as Address;
+    const recipient = await resolveRegisteredAddress({ rpc: session.client, owner: beneficiary });
+    if (!recipient) throw new Error("The beneficiary must connect to Zolius and register a Privacy Rings address first.");
+    const metadata = await new AssetMetadataCache(session.client).get(input.mint.trim() as Address);
+    const amount = amountForMint(input.amount, metadata.decimals);
+    if (amount <= 0n) throw new Error("Lock amount must be positive.");
+    const module = await loadProgramWasm("lock");
+    if (!module.createLockTransaction) throw new Error("Lock transaction builder is missing from the generated WASM module.");
+    const authority = await ProgramOwner.find(["zolius_lock", new PublicKey(session.address).toBytes()], LOCK_PROGRAM_ID);
+    const identity = signerIdentity(session.address);
+    const build = bindProgramTransaction(module.createLockTransaction, { assets: session.wallet.registry });
+    const prepared = await build({
+      private: {
+        txContext: { outputTreeId: session.client.treeId },
+        source: spendableProgramInput(session, input.mint.trim(), amount),
+        beneficiaryHash: Array.from(recipient.address.ownerHash()),
+        amount,
+        unlock: BigInt(input.unlockAt),
+        cancelable: input.cancelable ? 1n : 0n,
+      },
+      public: {
+        creatorIdentity: identity.field,
+        escrowOwner: authority.address(recipient.address.viewingPublicKey).toBytes(),
+      },
+    }, session.wallet.identity.toBytes(), session.address as Address);
+    const { proof } = await proveProgramAction("lock", "create_lock", prepared);
+    const signature = await submitProgramTransaction({
+      session,
+      program: LOCK_PROGRAM_ID,
+      pdaSeed: "zolius_lock",
+      action: "lock-create",
+      prepared,
+      proof,
+      viewingPubkey: recipient.address.viewingPublicKey.toBytes(),
+      ownerSigners: true,
+    });
+    return { signature, unlockAt: input.unlockAt };
+  } finally {
+    destroySession(session);
+  }
+}
+
+export async function createPrivateSwapOrder(
+  stored: StoredWallet,
+  input: { offerMint: string; offerAmount: string; requestMint: string; requestAmount: string; taker: string; expiresAt: number },
+): Promise<{ signature: string; expiresAt: number }> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const takerAddress = new PublicKey(input.taker.trim()).toBase58() as Address;
+    const recipient = await resolveRegisteredAddress({ rpc: session.client, owner: takerAddress });
+    if (!recipient) throw new Error("The taker must connect to Zolius and register a Privacy Rings address first.");
+    const metadata = new AssetMetadataCache(session.client);
+    const [offerDetails, requestDetails] = await Promise.all([
+      metadata.get(input.offerMint.trim() as Address),
+      metadata.get(input.requestMint.trim() as Address),
+    ]);
+    const offerAmount = amountForMint(input.offerAmount, offerDetails.decimals);
+    const requestAmount = amountForMint(input.requestAmount, requestDetails.decimals);
+    if (offerAmount <= 0n || requestAmount <= 0n) throw new Error("Both OTC amounts must be positive.");
+    const module = await loadProgramWasm("swap");
+    if (!module.makeOrderTransaction) throw new Error("Swap transaction builder is missing from the generated WASM module.");
+    const authority = await ProgramOwner.find(["zolius_order", new PublicKey(session.address).toBytes()], SWAP_PROGRAM_ID);
+    const identity = signerIdentity(session.address);
+    const build = bindProgramTransaction(module.makeOrderTransaction, { assets: session.wallet.registry });
+    const prepared = await build({
+      private: {
+        txContext: { outputTreeId: session.client.treeId },
+        source: spendableProgramInput(session, input.offerMint.trim(), offerAmount),
+        sourceAmount: offerAmount,
+        requestedMint: Mint.fromRegistry(session.wallet.registry, input.requestMint.trim() as Address),
+        requestedAmount: requestAmount,
+        expiry: BigInt(input.expiresAt),
+        takerIdentity: Array.from(signerIdentity(takerAddress).bytes),
+      },
+      public: {
+        makerIdentity: identity.field,
+        orderOwner: authority.address(recipient.address.viewingPublicKey).toBytes(),
+      },
+    }, session.wallet.identity.toBytes(), session.address as Address);
+    const { proof } = await proveProgramAction("swap", "make_order", prepared);
+    const signature = await submitProgramTransaction({
+      session,
+      program: SWAP_PROGRAM_ID,
+      pdaSeed: "zolius_order",
+      action: "swap-make",
+      prepared,
+      proof,
+      viewingPubkey: recipient.address.viewingPublicKey.toBytes(),
+      ownerSigners: true,
+    });
+    return { signature, expiresAt: input.expiresAt };
+  } finally {
+    destroySession(session);
+  }
+}
+
+export async function claimPrivateLock(
+  stored: StoredWallet,
+  input: { creator: string; id: string },
+): Promise<{ signature: string }> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const outputs = await recoverProgramOutputs(session, input.creator, "lock");
+    const lock = outputs.find((output) => output.id === input.id);
+    if (!lock) throw new Error("This private lock is already claimed or is not addressed to this wallet.");
+    const unlockAt = Number(lock.data.unlock);
+    if (!Number.isSafeInteger(unlockAt) || unlockAt > Math.floor(Date.now() / 1000)) {
+      throw new Error("This timelock has not unlocked yet.");
+    }
+    const module = await loadProgramWasm("lock");
+    if (!module.claimLockTransaction) throw new Error("Lock claim builder is missing from the generated WASM module.");
+    const signingKey = session.wallet.identity.signingPublicKey.toBytes();
+    const beneficiary = {
+      key: { tag: signingKey[0], bytes: signingKey.slice(1, 33) },
+      nullifierPk: BigInt(`0x${toHex(session.wallet.identity.nullifierPublicKey)}`).toString(),
+    };
+    const build = bindProgramTransaction(module.claimLockTransaction, { assets: session.wallet.registry });
+    const prepared = await build({
+      private: {
+        txContext: { outputTreeId: lock.utxo.treeId },
+        escrow: lock.utxo,
+        terms: lock.data,
+        beneficiary,
+      },
+      public: {
+        unlock: BigInt(unlockAt),
+        signerIdentity: signerIdentity(session.address).field,
+      },
+    }, session.wallet.identity.toBytes(), session.address as Address);
+    const { proof } = await proveProgramAction("lock", "claim_lock", prepared);
+    const signature = await submitProgramTransaction({
+      session,
+      program: LOCK_PROGRAM_ID,
+      pdaSeed: "zolius_lock",
+      pdaOwner: new PublicKey(input.creator.trim()).toBase58(),
+      action: "lock-claim",
+      prepared,
+      proof,
+      viewingPubkey: session.wallet.identity.viewingPublicKey.toBytes(),
+      ownerSigners: false,
+      release: { creator: new PublicKey(input.creator.trim()).toBytes(), unlock: BigInt(unlockAt) },
+    });
+    return { signature };
+  } finally {
+    destroySession(session);
+  }
+}
+
+export async function takePrivateSwapOrder(
+  stored: StoredWallet,
+  input: { maker: string; id: string },
+): Promise<{ signature: string }> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const outputs = await recoverProgramOutputs(session, input.maker, "swap");
+    const order = outputs.find((output) => output.id === input.id);
+    if (!order) throw new Error("This private OTC order is already taken or is not addressed to this wallet.");
+    const expiresAt = Number(order.data.expiry);
+    if (!Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000)) {
+      throw new Error("This OTC order has expired.");
+    }
+    const requestMint = String(order.data.requestedMint.asset) as Address;
+    const requestAmount = BigInt(order.data.requestedAmount);
+    const payment = spendableProgramInput(session, requestMint, requestAmount, true);
+    if (payment.treeId !== order.utxo.treeId) {
+      throw new Error("The order and exact payment note must be in the same Privacy Rings tree. Merge or refresh private notes, then retry.");
+    }
+    const makerAddress = new PublicKey(input.maker.trim()).toBase58() as Address;
+    const maker = await resolveRegisteredAddress({ rpc: session.client, owner: makerAddress });
+    if (!maker) throw new Error("The maker's registered Privacy Rings address could not be resolved.");
+    const module = await loadProgramWasm("swap");
+    if (!module.takeOrderTransaction) throw new Error("Swap take builder is missing from the generated WASM module.");
+    const requestedMint = Mint.fromRegistry(session.wallet.registry, requestMint);
+    const build = bindProgramTransaction(module.takeOrderTransaction, { assets: session.wallet.registry });
+    const prepared = await build({
+      private: {
+        txContext: { outputTreeId: order.utxo.treeId },
+        order: order.utxo,
+        terms: {
+          ...order.data,
+          requestedMint,
+          requestedAmount: requestAmount,
+          expiry: BigInt(expiresAt),
+          takerIdentity: Array.from(order.data.takerIdentity as Uint8Array),
+        },
+        takerInput: payment,
+        makerAddress: maker.address.toBytes(),
+      },
+      public: {
+        expiry: BigInt(expiresAt),
+        firstNullifier: BigInt(`0x${toHex(order.utxo.nullifier)}`).toString(),
+      },
+    }, session.wallet.identity.toBytes(), session.address as Address);
+    const { proof } = await proveProgramAction("swap", "take_order", prepared);
+    const signature = await submitProgramTransaction({
+      session,
+      program: SWAP_PROGRAM_ID,
+      pdaSeed: "zolius_order",
+      pdaOwner: makerAddress,
+      action: "swap-take",
+      prepared,
+      proof,
+      viewingPubkey: maker.address.viewingPublicKey.toBytes(),
+      ownerSigners: true,
+      maker: new PublicKey(makerAddress).toBytes(),
+    });
+    return { signature };
+  } finally {
+    destroySession(session);
   }
 }
 
@@ -264,6 +708,137 @@ function encodeBase64(bytes: Uint8Array): string {
     binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
   }
   return btoa(binary);
+}
+
+function concatBytes(...parts: Uint8Array[]): Uint8Array {
+  const bytes = new Uint8Array(parts.reduce((length, part) => length + part.length, 0));
+  let offset = 0;
+  for (const part of parts) {
+    bytes.set(part, offset);
+    offset += part.length;
+  }
+  return bytes;
+}
+
+function readProgramArtifact(kind: ZkProgramKind, action: string, file: string): Promise<Uint8Array> {
+  return fetch(`/zk/${kind}/${action}/${file}`, { cache: "force-cache" }).then(async (response) => {
+    if (!response.ok) throw new Error(`Could not load ${kind} ${action} proof artifact (${response.status}).`);
+    return new Uint8Array(await response.arrayBuffer());
+  });
+}
+
+async function loadProgramWasm(kind: ZkProgramKind): Promise<ZkProgramModule> {
+  const moduleName = kind === "lock" ? "zolius_lock_circuits" : "zolius_swap_circuits";
+  const module = await dynamicImport(`/zk/${kind}/wasm/${moduleName}.js`);
+  await module.default({ module_or_path: new URL(`/zk/${kind}/wasm/${moduleName}_bg.wasm`, window.location.origin) });
+  return module;
+}
+
+async function proveProgramAction(
+  kind: ZkProgramKind,
+  action: string,
+  transaction: ProgramTransactionLike,
+): Promise<{ module: ZkProgramModule; proof: { a: Uint8Array; b: Uint8Array; c: Uint8Array } }> {
+  const [module, circuit, provingKey, verifyingKey, sourcesResponse] = await Promise.all([
+    loadProgramWasm(kind),
+    readProgramArtifact(kind, action, "circuit.xbc"),
+    readProgramArtifact(kind, action, "pk.bin"),
+    readProgramArtifact(kind, action, "vk.bin"),
+    fetch(`/zk/${kind}/${action}/sources.json`, { cache: "force-cache" }),
+  ]);
+  if (!sourcesResponse.ok) throw new Error(`Could not load ${kind} circuit source metadata.`);
+  const sources = await sourcesResponse.text();
+  const session = new module.ProvingSession(circuit, provingKey, sources);
+  const verifier = new module.VerifyingKey(verifyingKey);
+  try {
+    const bundle = session.prove(transaction.proofInputs, {});
+    try {
+      if (!verifier.verify(bundle.proof, bundle.publicInputs)) {
+        throw new Error(`${kind} proof failed local verification; no transaction was sent.`);
+      }
+      const proof = module.programProof(bundle.proof, bundle.publicInputs, transaction.publicHash).compressedProof;
+      return { module, proof };
+    } finally {
+      bundle.free();
+    }
+  } finally {
+    verifier.free();
+    session.free();
+  }
+}
+
+async function submitProgramTransaction(input: {
+  session: SprSession;
+  program: Address;
+  pdaSeed: string;
+  action: "lock-create" | "lock-claim" | "swap-make" | "swap-take";
+  pdaOwner?: string;
+  prepared: ProgramTransactionLike;
+  proof: { a: Uint8Array; b: Uint8Array; c: Uint8Array };
+  viewingPubkey: Uint8Array;
+  ownerSigners: boolean;
+  release?: { creator: Uint8Array; unlock: bigint };
+  maker?: Uint8Array;
+}): Promise<string> {
+  const { session, program, pdaSeed, action, pdaOwner, prepared, proof, viewingPubkey, ownerSigners, release, maker } = input;
+  const actor = session.address as Address;
+  const pdaActor = (pdaOwner || actor) as Address;
+  const [authority, bump] = await PublicKey.findProgramAddress(
+    [new TextEncoder().encode(pdaSeed), new PublicKey(pdaActor).toBytes()],
+    new PublicKey(program),
+  );
+  const transact = await session.client.proveTransact(
+    prepared.transaction.encryptWithKeys(session.viewingKey),
+    session.keys,
+  );
+  const [inputTreeId] = prepared.transaction.inputs.map((utxo) => utxo.treeId);
+  if (inputTreeId === undefined) throw new Error("The private transaction has no input tree.");
+  const actorSigner = { address: actor } as Parameters<typeof transactCpiAccounts>[0]["payer"];
+  const cpiAccounts = [...await transactCpiAccounts({
+    payer: actorSigner,
+    inputTree: treeAddress(inputTreeId),
+    outputTree: treeAddress(prepared.transaction.outputTreeId),
+    ownerSigners: ownerSigners ? [actorSigner] : [],
+    data: transact,
+    signerPdas: [authority.toBase58() as Address],
+  })];
+  if (action === "swap-take") {
+    const signerStart = 4 + 1 + prepared.transaction.inputs.length;
+    const authorityIndex = cpiAccounts.findIndex((account, index) => index >= signerStart && account.address === authority.toBase58());
+    if (authorityIndex >= 0 && authorityIndex !== signerStart) {
+      const [pdaMeta] = cpiAccounts.splice(authorityIndex, 1);
+      if (pdaMeta) cpiAccounts.splice(signerStart, 0, pdaMeta);
+    }
+  }
+  const spp = encodeTransactInstructionData(transact);
+  const data = action === "lock-create"
+    ? lockCreate({ proof, viewingPubkey, bump, spp })
+    : action === "lock-claim"
+      ? lockRelease({ action: "claim", proof, creator: release?.creator || new Uint8Array(32), unlock: release?.unlock || 0n, bump, spp })
+      : action === "swap-make"
+        ? swapMake({ proof, viewingPubkey, bump, spp })
+        : swapTake({ proof, maker: maker || new Uint8Array(32), bump, spp });
+  const instruction = {
+    programAddress: program,
+    accounts: [
+      { address: actor, role: AccountRole.READONLY_SIGNER, signer: actorSigner },
+      ...cpiAccounts,
+    ],
+    data,
+  };
+  const lifetime = await session.client.getLatestBlockhash();
+  const message = appendTransactionMessageInstructions(
+    [instruction],
+    setTransactionMessageLifetimeUsingBlockhash(
+      lifetime,
+      setTransactionMessageFeePayer(actor, createTransactionMessage({ version: 0 })),
+    ),
+  );
+  const tx = await sendWithWallet(session, compileTransaction(message) as Parameters<typeof getBase64EncodedWireTransaction>[0]);
+  const slot = await session.client.confirmTransaction(tx as Signature);
+  await syncWallet({ client: session.client, wallet: session.wallet, keys: session.keys, config: { requireSlot: slot } });
+  await session.client.confirmPrivateTransaction(tx as Signature);
+  return tx;
 }
 
 async function sendWithWallet(
@@ -336,7 +911,9 @@ async function openSession(stored: StoredWallet): Promise<SprSession> {
   }
 
   let keys: LocalKeys;
+  let viewingKey: ViewingKey;
   try {
+    viewingKey = ViewingKey.fromDerivationSeed(derivationSeed);
     keys = LocalKeys.fromDerivationSeed(
       {
         solanaPublicKey: stored.address as Address,
@@ -352,6 +929,7 @@ async function openSession(stored: StoredWallet): Promise<SprSession> {
     client,
     wallet: new Wallet({ identity: keys.address() }),
     keys,
+    viewingKey,
     address: stored.address,
     walletId: stored.id,
   };
@@ -359,6 +937,11 @@ async function openSession(stored: StoredWallet): Promise<SprSession> {
 
 async function syncSession(session: SprSession): Promise<void> {
   await syncWallet({ client: session.client, wallet: session.wallet, keys: session.keys });
+}
+
+function destroySession(session: SprSession): void {
+  session.keys.destroy();
+  session.viewingKey.destroy();
 }
 
 async function ensureRegistered(session: SprSession): Promise<void> {
@@ -407,7 +990,7 @@ export async function shieldSol(
       notes: solNotes(session),
     };
   } finally {
-    session.keys.destroy();
+    destroySession(session);
   }
 }
 
@@ -447,7 +1030,7 @@ export async function transferPrivateSol(
       notes: solNotes(session),
     };
   } finally {
-    session.keys.destroy();
+    destroySession(session);
   }
 }
 
@@ -486,7 +1069,7 @@ export async function withdrawSol(
       notes: solNotes(session),
     };
   } finally {
-    session.keys.destroy();
+    destroySession(session);
   }
 }
 
@@ -501,6 +1084,6 @@ export async function readPrivateSolBalance(
       notes: solNotes(session),
     };
   } finally {
-    session.keys.destroy();
+    destroySession(session);
   }
 }
