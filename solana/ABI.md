@@ -16,7 +16,7 @@ Development program ID: `AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP`. Authorit
 | 1 | beneficiary | creator `[u8;32]`, unlock `u64`, bump `u8` | Claim at or after unlock. |
 | 2 | creator | creator `[u8;32]`, unlock `u64`, bump `u8` | Cancel before unlock only if terms permit. |
 
-Create requires exactly one SPP message with 64 bytes of data: the second output's commitment followed by the creator's public key. Its view tag and encryption must be constructed so the beneficiary can discover and decrypt the lock. Building, sharing and recovering that data is not implemented yet.
+Create requires exactly one SPP message with 64 bytes of data: the second output's commitment followed by the creator's public key. `client::prepare_lock` creates the marker and encrypts the output for the beneficiary; `open_locks` recovers matching locks from indexed history. The creator must keep the prepared output opening and confirmed leaf location to cancel after restart.
 
 ## Swap
 
@@ -28,8 +28,8 @@ Development program ID: `HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u`. Authorit
 | 1 | fee-paying signer | maker `[u8;32]`, bump `u8` | Take before the transaction's committed expiry. SPP must also receive the taker's input-owner signer. |
 | 2 | maker | bump `u8` | Cancel at any time while unspent. |
 
-Make requires one SPP marker message whose 64 bytes are the second output's commitment followed by the maker public key. The current take circuit closes the taker's input: it must contain exactly the requested amount. Splitting, discovery, payout recovery, encryption and transaction construction still require client implementation.
+Make requires one SPP marker message whose 64 bytes are the second output's commitment followed by the maker public key. `client::prepare_swap` builds make/take/cancel private transactions; `open_orders` recovers recipient orders from indexed history. The current take circuit closes the taker's input: its payment input must contain exactly the requested amount. Makers should preserve the prepared output and confirmed leaf location to recover the cancel input after restart. The recipient marker makes the maker address and marker payload public.
 
 ## Boundaries
 
-Circuit proof inputs bind the private transaction hash, but the programs also rely on the real Privacy Rings program to validate its proof, nullifiers, owner signatures and value conservation. The CPI account validation, signer wiring, encrypted output discovery and deployment IDs must be exercised together in localnet or devnet. A native proof test alone does not establish this end-to-end behavior.
+Circuit proof inputs bind the private transaction hash, but the programs also rely on the real Privacy Rings program to validate its proof, nullifiers, owner signatures and value conservation. Lock create/claim and malformed-instruction rejection have passed isolated localnet checks. Swap CPI, expiry edges, cancellation, encrypted output discovery and cluster-specific deployment IDs still need exercising together. A native proof test alone does not establish this end-to-end behavior.

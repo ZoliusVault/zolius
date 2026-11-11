@@ -304,18 +304,16 @@ pub fn prepare_take(taker: &ShieldedKeypair, params: TakeParams) -> Result<Prepa
         .first()
         .ok_or_else(|| anyhow!("missing change output"))?
         .blinding;
-    let private_tx_hash = prepared
-        .finalized
+    let finalized = prepared.finalized.with_expiry_unix_ts(expiry);
+    let private_tx_hash = finalized
         .padding_independent_private_tx_hash()
         .map_err(err)?;
     let viewing_key = taker
-        .get_transaction_viewing_key(&prepared.finalized.first_nullifier().map_err(err)?)
+        .get_transaction_viewing_key(&finalized.first_nullifier().map_err(err)?)
         .map_err(err)?;
-    let mut spp_inputs = prepared
-        .finalized
+    let spp_inputs = finalized
         .encrypt_with_viewing_key(&viewing_key)
         .map_err(err)?;
-    spp_inputs.external_data.expiry_unix_ts = expiry;
     ensure!(
         spp_inputs
             .padding_independent_private_tx_hash()

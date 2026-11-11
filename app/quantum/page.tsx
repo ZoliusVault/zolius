@@ -73,53 +73,91 @@ export default function QuantumPage() {
   ];
 
   return (
-    <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "48px var(--page-gutter)" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "40px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)", width: "100%" }}>
+      {/* Editorial Header (aligned with Privacy Policy & Landing) */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          flexWrap: "wrap",
+          gap: "var(--space-4)",
+          paddingBottom: "var(--space-5)",
+          borderBottom: "1px solid var(--color-border)",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--color-muted)",
+              marginBottom: "var(--space-2)",
+            }}
+          >
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "var(--radius-sm)",
+                backgroundColor: "rgba(255, 140, 0, 0.1)",
+                border: "1px solid rgba(255, 140, 0, 0.25)",
+                color: "var(--color-accent-ink)",
+                fontWeight: 700,
+              }}
+            >
+              SOLANA // ML-KEM-768
+            </span>
+            <span>// Post-Quantum Cryptography Specification</span>
+          </div>
+          <h1
+            style={{
+              margin: 0,
+              fontFamily: "var(--font-headline)",
+              fontSize: "clamp(2rem, 3.2vw, 2.6rem)",
+              lineHeight: 1.15,
+              color: "var(--color-text)",
+              letterSpacing: "-0.02em",
+              fontWeight: 600,
+            }}
+          >
+            Quantum Vault Roadmap &amp; Architecture
+          </h1>
+          <p
+            style={{
+              margin: "var(--space-2) 0 0 0",
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--text-body-sm)",
+              color: "var(--color-muted)",
+              maxWidth: "760px",
+              lineHeight: "1.65",
+            }}
+          >
+            Solana Privacy Rings protects token amounts on-chain with Groth16 zk-SNARKs. Quantum Vault introduces post-quantum hybrid viewing key encryption (X-Wing KEM: X25519 + ML-KEM-768) to protect transaction history against harvest-now-decrypt-later adversaries.
+          </p>
+        </div>
+
         <div
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "8px",
-            padding: "4px 12px",
-            borderRadius: "var(--radius-sm)",
-            backgroundColor: "rgba(255, 140, 0, 0.1)",
-            border: "1px solid rgba(255, 140, 0, 0.25)",
-            color: "var(--color-accent-ink)",
-            fontSize: "11px",
-            fontWeight: 700,
+            flexWrap: "wrap",
+            gap: "var(--space-3)",
             fontFamily: "var(--font-mono)",
-            letterSpacing: "0.06em",
-            marginBottom: "16px",
-          }}
-        >
-          // POST-QUANTUM CRYPTOGRAPHY SPECIFICATION
-        </div>
-        <h1
-          style={{
-            fontSize: "clamp(2rem, 3.5vw, 3rem)",
-            fontFamily: "var(--font-headline)",
-            fontWeight: 600,
-            letterSpacing: "-0.02em",
-            color: "var(--color-text)",
-            margin: "0 0 12px 0",
-            lineHeight: 1.15,
-          }}
-        >
-          Quantum Vault Roadmap &amp; Architecture
-        </h1>
-        <p
-          style={{
-            fontSize: "15px",
-            fontFamily: "var(--font-body)",
+            fontSize: "12px",
             color: "var(--color-muted)",
-            maxWidth: "760px",
-            lineHeight: "1.65",
-            margin: 0,
           }}
         >
-          Solana Privacy Rings protects token amounts on-chain with Groth16 zk-SNARKs. Quantum Vault introduces post-quantum hybrid viewing key encryption (X-Wing KEM: X25519 + ML-KEM-768) to protect transaction history against harvest-now-decrypt-later adversaries.
-        </p>
+          <span>ML-KEM-768</span>
+          <span style={{ opacity: 0.3 }}>/</span>
+          <span>X-Wing Lattice</span>
+          <span style={{ opacity: 0.3 }}>/</span>
+          <span>FIPS 203 Ready</span>
+        </div>
       </div>
 
       {/* Cryptographic Honesty Notice Card */}
