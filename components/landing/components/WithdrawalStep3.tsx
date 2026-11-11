@@ -519,9 +519,13 @@ export const WithdrawalStep3: React.FC = () => {
             fontSize: "var(--text-caption)",
             color: "var(--color-text)",
             fontWeight: 500,
-            minHeight: "2.8em",
+            height: "40px",
+            minHeight: "40px",
+            maxHeight: "40px",
             display: "flex",
             alignItems: "center",
+            lineHeight: 1.4,
+            overflow: "hidden",
           }}
         >
           {stage === 1 && `Proving Merkle membership locally in WASM for ${current.noteId}...`}

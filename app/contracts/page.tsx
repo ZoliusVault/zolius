@@ -94,18 +94,109 @@ export default function ContractsPage() {
   });
 
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "40px 20px" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "4px 10px", borderRadius: "999px", backgroundColor: "rgba(255, 140, 0, 0.12)", color: "var(--color-accent-ink)", fontSize: "11px", fontWeight: 700, fontFamily: "monospace", letterSpacing: "0.06em" }}>
-          SOLANA MAINNET-BETA · PROGRAM REGISTRY
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)", width: "100%" }}>
+      {/* Editorial Header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          flexWrap: "wrap",
+          gap: "var(--space-4)",
+          paddingBottom: "var(--space-5)",
+          borderBottom: "1px solid var(--color-border)",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--color-muted)",
+              marginBottom: "var(--space-2)",
+            }}
+          >
+            <span
+              style={{
+                padding: "2px 8px",
+                borderRadius: "var(--radius-sm)",
+                backgroundColor: "rgba(26, 26, 26, 0.05)",
+                border: "1px solid var(--color-border)",
+                color: "var(--color-text)",
+                fontWeight: 600,
+              }}
+            >
+              SOLANA MAINNET-BETA
+            </span>
+            <span>// PROGRAM REGISTRY &amp; VERIFIABLE BUILDS</span>
+          </div>
+          <h1
+            style={{
+              fontSize: "clamp(26px, 3.5vw, 42px)",
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              margin: 0,
+              fontFamily: "var(--font-headline)",
+              color: "var(--color-text)",
+            }}
+          >
+            Solana Programs &amp; Verifiable Builds
+          </h1>
+          <p
+            style={{
+              margin: "var(--space-3) 0 0",
+              fontSize: "14px",
+              color: "var(--color-muted)",
+              maxWidth: "760px",
+              lineHeight: "1.6",
+            }}
+          >
+            All canonical Solana program IDs, verifiable build hashes (solana-verify), and formal audit certifications across the Zolius Vault architecture.
+          </p>
         </div>
-        <h1 style={{ fontSize: "36px", fontWeight: 800, marginTop: "12px", marginBottom: "8px", letterSpacing: "-0.02em", color: "var(--color-text)" }}>
-          Solana Programs &amp; Verifiable Builds
-        </h1>
-        <p style={{ fontSize: "15px", color: "var(--color-muted)", lineHeight: "1.6", maxWidth: "760px" }}>
-          All Solana program IDs, verifiable build hashes (solana-verify), and security audit certifications across the Zolius Vault architecture.
-        </p>
+
+        {/* Telemetry Chips */}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <div
+            style={{
+              padding: "6px 12px",
+              borderRadius: "var(--radius-sm)",
+              border: "1px solid var(--color-border)",
+              backgroundColor: "#ffffff",
+              fontSize: "11px",
+              fontFamily: "var(--font-mono)",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span style={{ color: "#FF8C00", fontWeight: 700 }}>●</span>
+            <span style={{ color: "var(--color-muted)" }}>AUDITED:</span>
+            <span style={{ fontWeight: 600, color: "var(--color-text)" }}>CERTORA · OTTERSEC · ZKSECURITY</span>
+          </div>
+          <div
+            style={{
+              padding: "6px 12px",
+              borderRadius: "var(--radius-sm)",
+              border: "1px solid var(--color-border)",
+              backgroundColor: "#ffffff",
+              fontSize: "11px",
+              fontFamily: "var(--font-mono)",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span style={{ color: "#FF8C00", fontWeight: 700 }}>●</span>
+            <span style={{ color: "var(--color-muted)" }}>PROVABILITY:</span>
+            <span style={{ fontWeight: 600, color: "var(--color-text)" }}>SOLANA-VERIFY REPRODUCIBLE</span>
+          </div>
+        </div>
       </div>
 
       {/* Security Notice Card */}

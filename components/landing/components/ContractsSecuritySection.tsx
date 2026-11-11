@@ -15,7 +15,6 @@ interface ProgramEntry {
   source: string;
   explorerUrl: string;
   auditStatus: string;
-  auditColor: string;
   circuitDetails: string;
 }
 
@@ -40,7 +39,6 @@ export const ContractsSecuritySection: React.FC = () => {
       source: "Solana Privacy Rings v0.9.0-alpha",
       explorerUrl: "https://solscan.io/account/ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW",
       auditStatus: "Audited: Certora · OtterSec · zkSecurity",
-      auditColor: "#059669",
       circuitDetails: "Groth16 (BN254) · 26-Depth Poseidon Merkle Tree",
     },
     {
@@ -53,7 +51,6 @@ export const ContractsSecuritySection: React.FC = () => {
       source: "contracts/zolius-swap (solana-verify)",
       explorerUrl: "https://solscan.io/account/zolSwap111111111111111111111111111111111111",
       auditStatus: "Verifiable Build: solana-verify",
-      auditColor: "#B45309",
       circuitDetails: "Zero-Held-Custody Invariant · CPI Guard",
     },
     {
@@ -66,7 +63,6 @@ export const ContractsSecuritySection: React.FC = () => {
       source: "contracts/zolius-lock (solana-verify)",
       explorerUrl: "https://solscan.io/account/zolLock111111111111111111111111111111111111",
       auditStatus: "Verifiable Build: solana-verify",
-      auditColor: "#B45309",
       circuitDetails: "Deterministic Clock Release · Sender Revocation",
     },
     {
@@ -79,7 +75,6 @@ export const ContractsSecuritySection: React.FC = () => {
       source: "Helius Privacy Services API",
       explorerUrl: "https://www.helius.dev/docs/privacy",
       auditStatus: "SOC 2 Type II Certified",
-      auditColor: "#059669",
       circuitDetails: "End-to-End Encrypted Tunnel · Sub-50ms RPC",
     },
   ];
@@ -118,15 +113,16 @@ export const ContractsSecuritySection: React.FC = () => {
                   width: "36px",
                   height: "36px",
                   borderRadius: "8px",
-                  backgroundColor: "rgba(16, 185, 129, 0.12)",
+                  backgroundColor: "rgba(255, 140, 0, 0.08)",
+                  border: "1px solid rgba(255, 140, 0, 0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#059669",
+                  color: "#FF8C00",
                   flexShrink: 0,
                 }}
               >
-                <ShieldCheck size={20} />
+                <ShieldCheck size={19} />
               </div>
               <div>
                 <div style={{ fontSize: "11px", color: "var(--color-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "var(--font-mono)" }}>
@@ -144,15 +140,16 @@ export const ContractsSecuritySection: React.FC = () => {
                   width: "36px",
                   height: "36px",
                   borderRadius: "8px",
-                  backgroundColor: "rgba(255, 140, 0, 0.12)",
+                  backgroundColor: "rgba(255, 140, 0, 0.08)",
+                  border: "1px solid rgba(255, 140, 0, 0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--color-accent-ink)",
+                  color: "#FF8C00",
                   flexShrink: 0,
                 }}
               >
-                <Cpu size={20} />
+                <Cpu size={19} />
               </div>
               <div>
                 <div style={{ fontSize: "11px", color: "var(--color-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "var(--font-mono)" }}>
@@ -170,15 +167,16 @@ export const ContractsSecuritySection: React.FC = () => {
                   width: "36px",
                   height: "36px",
                   borderRadius: "8px",
-                  backgroundColor: "rgba(59, 130, 246, 0.12)",
+                  backgroundColor: "rgba(255, 140, 0, 0.08)",
+                  border: "1px solid rgba(255, 140, 0, 0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#2563eb",
+                  color: "#FF8C00",
                   flexShrink: 0,
                 }}
               >
-                <CheckCircle2 size={20} />
+                <CheckCircle2 size={19} />
               </div>
               <div>
                 <div style={{ fontSize: "11px", color: "var(--color-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "var(--font-mono)" }}>
@@ -203,7 +201,7 @@ export const ContractsSecuritySection: React.FC = () => {
             }}
           >
             {/* Column 1: Interactive Program Selector List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <div
                 style={{
                   fontSize: "12px",
@@ -227,25 +225,29 @@ export const ContractsSecuritySection: React.FC = () => {
                     style={{
                       display: "flex",
                       flexDirection: "column",
+                      justifyContent: "center",
                       gap: "8px",
                       padding: "16px 20px",
+                      minHeight: "92px",
+                      boxSizing: "border-box",
                       borderRadius: "var(--radius-md)",
-                      border: isSelected ? "1.5px solid #FF8C00" : "1px solid var(--color-border)",
-                      backgroundColor: "#ffffff",
+                      border: "1px solid",
+                      borderColor: isSelected ? "#FF8C00" : "var(--color-border)",
+                      backgroundColor: isSelected ? "rgba(255, 140, 0, 0.03)" : "#ffffff",
                       boxShadow: isSelected ? "0 4px 16px rgba(255, 140, 0, 0.12)" : "0 2px 8px rgba(26, 26, 26, 0.03)",
                       textAlign: "left",
                       cursor: "pointer",
-                      transition: "border-color 150ms ease, box-shadow 150ms ease",
+                      transition: "border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease",
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", gap: "8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <span
                           style={{
-                            fontSize: "15px",
+                            fontSize: "14.5px",
                             fontFamily: "var(--font-headline)",
                             fontWeight: 700,
-                            color: isSelected ? "#B45309" : "var(--color-text)",
+                            color: isSelected ? "#FF8C00" : "var(--color-text)",
                           }}
                         >
                           {prog.name}
@@ -258,9 +260,9 @@ export const ContractsSecuritySection: React.FC = () => {
                           fontWeight: 700,
                           padding: "2px 8px",
                           borderRadius: "4px",
-                          backgroundColor: `${prog.auditColor}18`,
-                          color: prog.auditColor,
-                          border: `1px solid ${prog.auditColor}33`,
+                          backgroundColor: isSelected ? "rgba(255, 140, 0, 0.12)" : "rgba(26, 26, 26, 0.04)",
+                          color: isSelected ? "#FF8C00" : "var(--color-muted)",
+                          border: isSelected ? "1px solid rgba(255, 140, 0, 0.3)" : "1px solid var(--color-border)",
                           whiteSpace: "nowrap",
                         }}
                       >
@@ -284,12 +286,12 @@ export const ContractsSecuritySection: React.FC = () => {
                       <span
                         style={{
                           fontSize: "11px",
-                          color: isSelected ? "var(--color-accent-ink)" : "var(--color-faint)",
+                          color: isSelected ? "#FF8C00" : "var(--color-faint)",
                           fontWeight: 600,
                           flexShrink: 0,
                         }}
                       >
-                        {isSelected ? "Inspecting →" : "View"}
+                        {isSelected ? "Active Selection" : "Inspect →"}
                       </span>
                     </div>
                   </button>
@@ -302,6 +304,9 @@ export const ContractsSecuritySection: React.FC = () => {
               style={{
                 display: "flex",
                 flexDirection: "column",
+                justifyContent: "space-between",
+                minHeight: "470px",
+                boxSizing: "border-box",
                 gap: "18px",
                 padding: "26px",
                 borderRadius: "var(--radius-lg)",
@@ -310,58 +315,61 @@ export const ContractsSecuritySection: React.FC = () => {
                 boxShadow: "0 8px 30px rgba(26, 26, 26, 0.05)",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", flexWrap: "wrap" }}>
-                <div>
-                  <div
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", flexWrap: "wrap" }}>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        fontFamily: "var(--font-mono)",
+                        color: "#FF8C00",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {selectedProgram.role}
+                    </div>
+                    <h3
+                      style={{
+                        margin: "6px 0 0 0",
+                        fontSize: "20px",
+                        fontFamily: "var(--font-headline)",
+                        fontWeight: 700,
+                        color: "var(--color-text)",
+                      }}
+                    >
+                      {selectedProgram.name}
+                    </h3>
+                  </div>
+                  <span
                     style={{
                       fontSize: "11px",
-                      fontFamily: "var(--font-mono)",
-                      color: "var(--color-accent-ink)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
                       fontWeight: 700,
+                      padding: "3px 10px",
+                      borderRadius: "6px",
+                      backgroundColor: "rgba(255, 140, 0, 0.08)",
+                      color: "#FF8C00",
+                      border: "1px solid rgba(255, 140, 0, 0.25)",
                     }}
                   >
-                    {selectedProgram.role}
-                  </div>
-                  <h3
-                    style={{
-                      margin: "6px 0 0 0",
-                      fontSize: "20px",
-                      fontFamily: "var(--font-headline)",
-                      fontWeight: 700,
-                      color: "var(--color-text)",
-                    }}
-                  >
-                    {selectedProgram.name}
-                  </h3>
+                    {selectedProgram.auditStatus}
+                  </span>
                 </div>
-                <span
+
+                {/* Description with stable min-height */}
+                <p
                   style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    padding: "3px 10px",
-                    borderRadius: "6px",
-                    backgroundColor: `${selectedProgram.auditColor}18`,
-                    color: selectedProgram.auditColor,
-                    border: `1px solid ${selectedProgram.auditColor}44`,
+                    fontSize: "13.5px",
+                    lineHeight: "1.65",
+                    color: "var(--color-muted)",
+                    margin: "16px 0 0",
+                    minHeight: "68px",
                   }}
                 >
-                  {selectedProgram.auditStatus}
-                </span>
+                  {selectedProgram.description}
+                </p>
               </div>
-
-              {/* Description */}
-              <p
-                style={{
-                  fontSize: "13.5px",
-                  lineHeight: "1.65",
-                  color: "var(--color-muted)",
-                  margin: 0,
-                }}
-              >
-                {selectedProgram.description}
-              </p>
 
               {/* Monospace Address & Copy Terminal Box */}
               <div
@@ -390,12 +398,12 @@ export const ContractsSecuritySection: React.FC = () => {
                         alignItems: "center",
                         gap: "4px",
                         fontSize: "11px",
-                        color: copiedAddress === selectedProgram.address ? "#059669" : "var(--color-accent-ink)",
+                        color: copiedAddress === selectedProgram.address ? "#FF8C00" : "var(--color-muted)",
                         fontWeight: 600,
                         cursor: "pointer",
                       }}
                     >
-                      {copiedAddress === selectedProgram.address ? <Check size={13} /> : <Copy size={13} />}
+                      {copiedAddress === selectedProgram.address ? <Check size={13} color="#FF8C00" /> : <Copy size={13} />}
                       <span>{copiedAddress === selectedProgram.address ? "Copied" : "Copy"}</span>
                     </button>
                     <a
@@ -440,6 +448,8 @@ export const ContractsSecuritySection: React.FC = () => {
                     borderRadius: "var(--radius-sm)",
                     border: "1px solid var(--color-border)",
                     backgroundColor: "#ffffff",
+                    minHeight: "68px",
+                    boxSizing: "border-box",
                   }}
                 >
                   <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "var(--color-faint)", textTransform: "uppercase" }}>
@@ -456,6 +466,8 @@ export const ContractsSecuritySection: React.FC = () => {
                     borderRadius: "var(--radius-sm)",
                     border: "1px solid var(--color-border)",
                     backgroundColor: "#ffffff",
+                    minHeight: "68px",
+                    boxSizing: "border-box",
                   }}
                 >
                   <div style={{ fontSize: "10px", fontFamily: "var(--font-mono)", color: "var(--color-faint)", textTransform: "uppercase" }}>
@@ -475,14 +487,14 @@ export const ContractsSecuritySection: React.FC = () => {
                   gap: "10px",
                   padding: "12px 14px",
                   borderRadius: "var(--radius-sm)",
-                  backgroundColor: "rgba(16, 185, 129, 0.06)",
-                  border: "1px solid rgba(16, 185, 129, 0.2)",
+                  backgroundColor: "rgba(255, 140, 0, 0.05)",
+                  border: "1px solid rgba(255, 140, 0, 0.2)",
                   fontSize: "12px",
-                  color: "#059669",
+                  color: "var(--color-text)",
                   fontWeight: 600,
                 }}
               >
-                <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
+                <CheckCircle2 size={16} color="#FF8C00" style={{ flexShrink: 0 }} />
                 <span>Zero-Held-Custody Invariant: No intermediary custody of user keys or tokens at any time.</span>
               </div>
             </div>

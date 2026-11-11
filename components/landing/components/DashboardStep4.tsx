@@ -233,8 +233,12 @@ export const DashboardStep4: React.FC = () => {
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "var(--space-3)",
-                  transition: "all 0.35s ease",
+                  justifyContent: "space-between",
+                  minHeight: "72px",
+                  height: "72px",
+                  boxSizing: "border-box",
+                  gap: "var(--space-2)",
+                  transition: "opacity 0.25s ease",
                 }}
               >
                 <p
@@ -242,8 +246,12 @@ export const DashboardStep4: React.FC = () => {
                     margin: 0,
                     fontFamily: "var(--font-body)",
                     fontSize: "var(--text-body)",
-                    lineHeight: "var(--leading-body)",
+                    lineHeight: "1.35",
                     color: "var(--color-text)",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
                   }}
                 >
                   {item.text}

@@ -15,6 +15,8 @@ pub struct Context {
     pub payer: Address,
     pub input_trees: Vec<Address>,
     pub output_tree: Address,
+    /// External wallet signers in the SPP input-owner order; the app PDA is
+    /// inserted at its input position for program-owned spends.
     pub owner_signers: Vec<Address>,
     pub spp: TransactIxData,
 }

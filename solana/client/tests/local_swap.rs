@@ -235,14 +235,6 @@ fn maker_posts_and_taker_fills_private_order() -> Result<()> {
     let program_nullifier = ProgramOwner::nullifier_key();
     let authority = BothOwners(&program_nullifier, &taker);
     let spp = client.prove_transact(taken.spp_inputs, None, &authority)?;
-    eprintln!(
-        "take selector={:?} inputs={} outputs={} trees={} expiry={}",
-        spp.circuit,
-        spp.inputs.len(),
-        spp.outputs.len(),
-        spp.tree_contexts.len(),
-        spp.expiry_unix_ts
-    );
     ensure!(
         spp.private_tx_hash == taken.private_tx_hash,
         "take proof hash mismatch"

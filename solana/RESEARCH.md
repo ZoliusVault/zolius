@@ -22,8 +22,11 @@ Default Ring transfer hides asset, amount and memo, while sender and recipient r
 
 The fixed-message wallet signature is derivation material for the viewing and nullifier keys and must be protected as a secret. A shared viewing key cannot be made unknown to a recipient who already received it merely by disabling an app link or setting an expiry.
 
-## Verification still needed
+## Verification completed and still needed
 
-Build actual programs and circuits, regenerate matching non-test proving and verification artifacts, implement client transaction/proof builders, then exercise make/take/cancel and lock/claim/cancel with adversarial cases and the target Privacy Rings deployment. Verify SBF builds, program IDs and deployment authority. A host-only unit test does not prove CPI, circuit binding or deployed behavior.
+- Built both SBF programs with local development verifiers. Native tests and generated-verifier Groth16 proofs cover all six application actions.
+- Isolated localnet exercised Lock deposit/create/CPI/index/claim and Swap deposit/make/CPI/index/recover/take/CPI against the pinned Helius Privacy Rings program.
+- Still needed for launch: non-test proving/verifying artifacts, deployment with cluster-specific program IDs and upgrade authority, and devnet configuration. Swap cancel CPI and exact expiry-boundary behavior have not been exercised end to end.
+- These localnet runs do not establish deployed behavior. `zolana zk compile --test` keys are public and forgeable; they cannot protect funds.
 
 Sources: https://www.helius.dev/docs/privacy/sdk ; https://www.helius.dev/docs/privacy/addresses ; https://www.helius.dev/docs/privacy/integration/wallet ; https://github.com/helius-labs/privacy-ring-examples

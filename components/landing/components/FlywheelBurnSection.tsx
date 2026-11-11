@@ -73,8 +73,9 @@ export const FlywheelBurnSection: React.FC = () => {
                     letterSpacing: "0.06em",
                     padding: "3px 8px",
                     borderRadius: "var(--radius-full)",
-                    backgroundColor: "rgba(16, 185, 129, 0.12)",
-                    color: "#059669",
+                    backgroundColor: "rgba(255, 140, 0, 0.12)",
+                    color: "var(--color-accent)",
+                    border: "1px solid rgba(255, 140, 0, 0.25)",
                     fontWeight: 700,
                   }}
                 >
