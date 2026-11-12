@@ -121,7 +121,7 @@ export const HeroSection: React.FC = () => {
               overflowWrap: "break-word",
             }}
           >
-            Self-custodial confidential transfers on Solana Privacy Rings. Quantum Vault uses X-Wing to protect viewing keys.
+            Self-custodial confidential transfers built on Solana Privacy Rings, protected by hybrid ML-KEM-768 quantum vaults.
           </h1>
 
           <div
