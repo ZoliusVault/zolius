@@ -105,7 +105,7 @@ export const HeroSection: React.FC = () => {
         <div
           className="hero-enter"
           style={{
-            maxWidth: "min(100%, 42rem)",
+            maxWidth: "min(100%, 34rem)",
             animationDelay: "160ms",
           }}
         >

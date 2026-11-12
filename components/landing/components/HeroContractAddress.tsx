@@ -35,15 +35,16 @@ export const HeroContractAddress: React.FC = () => {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "8px",
-        marginTop: "var(--space-4, 1rem)",
+        gap: "7px",
+        marginTop: "var(--space-3, 0.75rem)",
         cursor: "pointer",
         fontFamily: "var(--font-mono, monospace)",
-        fontSize: "clamp(12.5px, 1.55vw, 15px)",
+        fontSize: "clamp(11.5px, 1.35vw, 13.5px)",
         lineHeight: 1.4,
         color: "var(--color-text, #111111)",
         userSelect: "all",
         maxWidth: "100%",
+        whiteSpace: "nowrap",
         animationDelay: "180ms",
       }}
     >
@@ -51,7 +52,7 @@ export const HeroContractAddress: React.FC = () => {
         style={{
           color: "var(--color-muted, #666666)",
           fontWeight: 700,
-          letterSpacing: "0.04em",
+          letterSpacing: "0.03em",
           flexShrink: 0,
         }}
       >
@@ -62,7 +63,7 @@ export const HeroContractAddress: React.FC = () => {
         style={{
           fontWeight: 700,
           letterSpacing: "0.02em",
-          wordBreak: "break-all",
+          flexShrink: 0,
         }}
       >
         {TOKEN_CONTRACT_ADDRESS}
@@ -83,13 +84,13 @@ export const HeroContractAddress: React.FC = () => {
       >
         {copied ? (
           <>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.4">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2">
               <path d="M2.5 7.5L5.5 10.5L11.5 3.5" />
             </svg>
             <span>Copied!</span>
           </>
         ) : (
-          <svg width="15" height="15" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ opacity: 0.85 }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ opacity: 0.85 }}>
             <rect x="4.5" y="4.5" width="7" height="7" rx="1.5" />
             <path d="M9.5 4.5V2.5C9.5 1.95 9.05 1.5 8.5 1.5H2.5C1.95 1.5 1.5 1.95 1.5 2.5V8.5C1.5 9.05 1.95 9.5 2.5 9.5H4.5" />
           </svg>
