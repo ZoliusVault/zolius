@@ -16,7 +16,7 @@ import {
 } from "@/lib/helius-spr-browser";
 
 const SOL_MINT = "11111111111111111111111111111111";
-const DEVNET_USDC_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+const MAINNET_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
 const fieldStyle: React.CSSProperties = {
   width: "100%",
@@ -35,13 +35,13 @@ function short(value: string): string {
 
 function assetName(mint: string): string {
   if (mint === SOL_MINT) return "SOL";
-  if (mint === DEVNET_USDC_MINT) return "USDC";
+  if (mint === MAINNET_USDC_MINT) return "USDC";
   return "SPL Token";
 }
 
 function AssetLogo({ mint, size = 18 }: { mint: string; size?: number }) {
   if (mint === SOL_MINT) return <SolLogo size={size} />;
-  if (mint === DEVNET_USDC_MINT) return <UsdcLogo size={size} />;
+  if (mint === MAINNET_USDC_MINT) return <UsdcLogo size={size} />;
   return <SplLogo size={size} />;
 }
 
@@ -51,7 +51,7 @@ function HistoryRow({ row }: { row: PrivateHistoryEntry }) {
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.4fr", gap: 12, alignItems: "center", borderTop: "1px solid var(--color-border)", padding: "12px 0", fontSize: 12 }}>
       <span style={{ display: "inline-flex", alignItems: "center", gap: 7, textTransform: "capitalize" }}><AssetLogo mint={row.mint} size={17} />{assetName(row.mint)} · {row.kind.replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)}</span>
       <strong style={{ fontFamily: "var(--font-mono)" }}>{signed}{formatTokenAmount(row.amount, row.decimals)}</strong>
-      <a href={`https://explorer.solana.com/tx/${row.signature}?cluster=devnet`} target="_blank" rel="noreferrer" style={{ color: "var(--color-accent-ink)", fontFamily: "var(--font-mono)" }}>{short(row.signature)}</a>
+      <a href={`https://explorer.solana.com/tx/${row.signature}`} target="_blank" rel="noreferrer" style={{ color: "var(--color-accent-ink)", fontFamily: "var(--font-mono)" }}>{short(row.signature)}</a>
     </div>
   );
 }
@@ -78,7 +78,7 @@ export function PrivacyAssetsPanel({ wallet, onConnect }: { wallet: StoredWallet
     }
   }, [wallet]);
 
-  const mint = mintMode === "SOL" ? SOL_MINT : mintMode === "USDC" ? DEVNET_USDC_MINT : customMint.trim();
+const mint = mintMode === "SOL" ? SOL_MINT : mintMode === "USDC" ? MAINNET_USDC_MINT : customMint.trim();
   const selectedBalance = useMemo(
     () => portfolio?.balances.find((balance) => balance.mint === mint),
     [portfolio, mint],
@@ -138,7 +138,7 @@ export function PrivacyAssetsPanel({ wallet, onConnect }: { wallet: StoredWallet
   return (
     <section style={{ display: "grid", gap: 20 }}>
       <header style={{ display: "flex", flexWrap: "wrap", alignItems: "end", justifyContent: "space-between", gap: 20, borderBottom: "1px solid var(--color-border)", paddingBottom: 22 }}>
-        <div><div style={{ color: "var(--color-accent-ink)", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase" }}>Privacy Rings // Solana Devnet</div><h1 style={{ margin: "8px 0 4px", fontFamily: "var(--font-headline)", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 500 }}>Private assets &amp; history</h1><p style={{ margin: 0, color: "var(--color-muted)" }}>Real deposit, private transfer, withdrawal, balance sync, and indexed history.</p></div>
+        <div><div style={{ color: "var(--color-accent-ink)", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase" }}>Privacy Rings // Solana Mainnet</div><h1 style={{ margin: "8px 0 4px", fontFamily: "var(--font-headline)", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 500 }}>Private assets &amp; history</h1><p style={{ margin: 0, color: "var(--color-muted)" }}>Real deposit, private transfer, withdrawal, balance sync, and indexed history.</p></div>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--color-muted)" }}>{wallet ? short(wallet.address) : "Wallet not connected"}</span>
           <button type="button" className="lp-btn lp-btn--outline" onClick={onConnect}>{wallet ? "Change wallet" : "Connect wallet"}</button>
@@ -157,7 +157,7 @@ export function PrivacyAssetsPanel({ wallet, onConnect }: { wallet: StoredWallet
             <div role="group" aria-label="Choose a private asset" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
               {([
                 { id: "SOL", title: "SOL", detail: "Native Solana", Logo: SolLogo },
-                { id: "USDC", title: "USDC", detail: "Devnet USDC", Logo: UsdcLogo },
+                { id: "USDC", title: "USDC", detail: "Circle USDC", Logo: UsdcLogo },
                 { id: "CUSTOM", title: "SPL", detail: "Token-2022", Logo: SplLogo },
               ] as const).map(({ id, title, detail, Logo }) => {
                 const selected = mintMode === id;
@@ -173,7 +173,7 @@ export function PrivacyAssetsPanel({ wallet, onConnect }: { wallet: StoredWallet
           {operation !== "deposit" && <label style={{ display: "grid", gap: 6, fontSize: 13 }}>{operation === "send" ? "Recipient Solana wallet" : "Public withdrawal destination"}<input style={fieldStyle} value={recipient} onChange={(event) => setRecipient(event.target.value)} placeholder="Base58 address" /></label>}
           <button className="lp-btn lp-btn--filled" disabled={busy || (mintMode === "CUSTOM" && !mint)}>{busy ? "Building proof & confirming…" : actionLabel}</button>
           <small style={{ color: "var(--color-muted)", lineHeight: 1.5 }}>
-            Token mint and decimals are resolved against Solana Devnet. Deposits and withdrawals reveal the asset, amount, and public destination on-chain. Private sends encrypt the asset and amount; the sender and recipient addresses remain public. The transaction proof is produced by Helius&apos; attested Devnet prover.
+            Token mint and decimals are resolved against Solana Mainnet. Deposits and withdrawals reveal the asset, amount, and public destination on-chain. Private sends encrypt the asset and amount; the sender and recipient addresses remain public. The transaction proof is produced by Helius&apos; attested Mainnet prover.
           </small>
         </form>
 

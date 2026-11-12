@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import QRCode from "qrcode";
 import { Copy, ExternalLink, Send, Shield, Wallet } from "lucide-react";
-import { DevnetBadge, Panel } from "./Shared";
+import { MainnetBadge, Panel } from "./Shared";
 import { loadWallet, subscribeWalletChange, type StoredWallet } from "@/lib/wallets";
 import { ensurePrivacyWalletRegistered, readPrivatePortfolio, shieldPrivateAsset, shieldSol, transferPrivateAsset, transferPrivateSol } from "@/lib/helius-spr-browser";
 import { decryptInvoiceForWallet, decryptInvoiceFromLink, encryptInvoiceForPayee, getVaultPublicKey, signInvoicePaid, signPayHandleRegistration, type VaultEnvelope } from "@/lib/quantum-vault";
@@ -129,7 +129,7 @@ export default function PayClient() {
       const normalizedHandle = payHandle.trim().toLowerCase().replace(/^@/, "");
       const profile = await jsonRequest<HandleRecord>(`/api/pay/handles?handle=${encodeURIComponent(normalizedHandle)}`);
       const selectedMint = assetKind === "SOL" ? SOL_MINT : mint.trim();
-      if (!selectedMint) throw new Error("Enter the Devnet token mint.");
+      if (!selectedMint) throw new Error("Enter the Mainnet token mint.");
       const id = crypto.randomUUID();
       const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
       const encrypted = await encryptInvoiceForPayee(profile.address, profile.vaultPublicKey, { id, amount, mint: selectedMint, note: note.trim(), expiresAt }, expiresAt);
@@ -196,7 +196,7 @@ export default function PayClient() {
   const hasInvoice = useMemo(() => Boolean(recipient && amount), [recipient, amount]);
   return <div className="np-content np-grid np-grid--2">
     <Panel eyebrow="Permanent payment identity" title="Claim your Zolius Pay handle">
-      <DevnetBadge small />
+      <MainnetBadge small />
       <p className="np-muted" style={{ marginTop: 14 }}>Register a unique handle for a reusable link. Your wallet signs ownership and derives an X-Wing viewing key locally; only the public address and public key are stored.</p>
       <div className="np-field"><label htmlFor="pay-handle">HANDLE</label><div className="np-input-row"><span className="np-small">/pay/</span><input id="pay-handle" className="np-input" maxLength={24} autoComplete="off" value={handleDraft} onChange={event => setHandleDraft(event.target.value)} placeholder="your-name" /></div></div>
       <button className="np-button" disabled={!wallet || busy || handleDraft.trim().length < 3} onClick={() => void registerHandle()}><Shield size={14}/>{busy ? "Signingâ€¦" : ownHandle ? "Verify / restore my handle" : "Register permanent link"}</button>
@@ -207,8 +207,8 @@ export default function PayClient() {
     <Panel eyebrow="One-time invoice" title="Create a private payment request">
       <p className="np-muted">Invoice terms are X-Wing encrypted in your browser and stored as ciphertext. The decryption key is kept in the URL fragment, which is not sent to the server.</p>
       <div className="np-field"><label htmlFor="pay-recipient-handle">RECIPIENT HANDLE</label><input id="pay-recipient-handle" className="np-input" value={payHandle} onChange={event => setPayHandle(event.target.value)} placeholder="their-handle" /></div>
-      <div className="np-field"><label htmlFor="pay-asset">ASSET</label><select id="pay-asset" className="np-select" value={assetKind} onChange={event => setAssetKind(event.target.value as "SOL" | "SPL")}><option value="SOL">SOL</option><option value="SPL">Devnet SPL token</option></select></div>
-      {assetKind === "SPL" && <div className="np-field"><label htmlFor="pay-mint">DEVNET TOKEN MINT</label><input id="pay-mint" className="np-input" value={mint} onChange={event => setMint(event.target.value)} placeholder="Paste a Devnet token mint" /></div>}
+      <div className="np-field"><label htmlFor="pay-asset">ASSET</label><select id="pay-asset" className="np-select" value={assetKind} onChange={event => setAssetKind(event.target.value as "SOL" | "SPL")}><option value="SOL">SOL</option><option value="SPL">Mainnet SPL token</option></select></div>
+      {assetKind === "SPL" && <div className="np-field"><label htmlFor="pay-mint">MAINNET TOKEN MINT</label><input id="pay-mint" className="np-input" value={mint} onChange={event => setMint(event.target.value)} placeholder="Paste a Mainnet token mint" /></div>}
       <div className="np-field"><label htmlFor="pay-amount">AMOUNT</label><input id="pay-amount" className="np-input" inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} placeholder="0.25" /></div>
       <div className="np-field"><label htmlFor="pay-note">PRIVATE NOTE (OPTIONAL)</label><input id="pay-note" className="np-input" maxLength={240} value={note} onChange={event => setNote(event.target.value)} placeholder="Invoice note" /></div>
       <button className="np-button" disabled={!wallet || busy || !payHandle || !amount || (assetKind === "SPL" && !mint)} onClick={() => void createInvoice()}><Copy size={14}/>{busy ? "Encryptingâ€¦" : "Create encrypted invoice & QR"}</button>
@@ -216,7 +216,7 @@ export default function PayClient() {
     </Panel>
 
     <Panel eyebrow="Payment" title={paid ? "Invoice paid" : "Settle from a private balance"}>
-      {isPayRoute && <DevnetBadge small />}
+      {isPayRoute && <MainnetBadge small />}
       {recipient && <div className="np-field" style={{ marginTop: 16 }}><label>RECIPIENT SHIELDED ADDRESS</label><code className="np-address">{recipient}</code></div>}
       {hasInvoice && <div className="np-stat"><div className="np-stat-label">Requested amount</div><div className="np-stat-value">{amount} {assetKind === "SOL" ? "SOL" : "SPL"}</div>{note && <div className="np-stat-note">Encrypted invoice note: {note}</div>}</div>}
       <div className="np-note" style={{ marginTop: 16 }}><strong>Confidential:</strong> paying from a sufficient private balance hides the asset and amount. Sender and recipient remain visible.</div>

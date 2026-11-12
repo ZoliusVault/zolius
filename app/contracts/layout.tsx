@@ -3,11 +3,11 @@
 export const metadata: Metadata = {
   title: "Verified Contracts Registry",
   description:
-    "Live executable account checks for Helius Privacy Rings and Zolius programs on Solana Devnet.",
+    "Mainnet protocol address registry for Helius Privacy Rings on Solana Mainnet.",
   openGraph: {
     title: "Verified Contracts Registry | Zolius Protocol",
     description:
-      "Live executable account checks for Helius Privacy Rings and Zolius programs on Solana Devnet.",
+      "Mainnet protocol address registry for Helius Privacy Rings on Solana Mainnet.",
     images: ["/contracts/opengraph-image"],
   },
 };

@@ -16,11 +16,11 @@ function response(body: unknown, status = 200) {
 }
 
 async function rpc(calls: unknown[], signal: AbortSignal) {
-  const rpcUrl = process.env.SOLANA_DEVNET_RPC_URL || "https://api.devnet.solana.com";
+  const rpcUrl = process.env.SOLANA_MAINNET_RPC_URL || "https://api.mainnet-beta.solana.com";
   const res = await fetch(rpcUrl, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(calls), cache: "no-store", signal,
   });
-  if (!res.ok) throw new Error(`Devnet data service returned HTTP ${res.status}.`);
+  if (!res.ok) throw new Error(`Solana Mainnet data service returned HTTP ${res.status}.`);
   return res.json();
 }
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         const list = Array.isArray(rows) ? rows : [rows];
         return [list.find((row) => row.id === "balance"), list.find((row) => row.id === "signatures"), list.find((row) => row.id === "assets")];
       });
-      if (balanceRow?.error || signatureRow?.error || assetRow?.error) throw new Error("Helius Devnet could not return all wallet data. Retry shortly.");
+      if (balanceRow?.error || signatureRow?.error || assetRow?.error) throw new Error("Helius Mainnet could not return all wallet data. Retry shortly.");
       const signatures: any[] = signatureRow?.result || [];
       const recent = signatures.slice(0, 20);
       const txRows: any[] = recent.length ? await rpc(recent.map((row, index) => ({
@@ -121,14 +121,14 @@ export async function POST(req: NextRequest) {
       const hasMore = txCount === 1000 && Boolean(moreRows[0]?.result?.length);
       const maxBucket = (items: number[]) => items.indexOf(Math.max(...items));
       const result = {
-        address: owner, network: "Solana Devnet", solUsd, balance: { sol: balanceLamports / 1e9, lamports: balanceLamports, usd: balanceUsd, tokens: assets },
+        address: owner, network: "Solana Mainnet", solUsd, balance: { sol: balanceLamports / 1e9, lamports: balanceLamports, usd: balanceUsd, tokens: assets },
         history: { count: txCount, countLabel: hasMore ? "1,000+" : String(txCount), oldestScannedAt: signatures.at(-1)?.blockTime || null, recent: history },
         counterparties: [...partnerCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([address, count]) => ({ address, count })),
         activity: { busiestHourUtc: maxBucket(hours), busiestDayUtc: maxBucket(days), sampleSize: recent.length },
         score: shortScore(txCount, balanceUsd, partnerCounts.size),
         scoreFormula: "Activity 0–40 (log₁₀ of scanned transactions) + visible portfolio value 0–30 (log₁₀ USD) + distinct counterparties 0–30 (1.5 points each). Max scan: 1,000 signatures; activity patterns use the 20 newest parsed transactions.",
         providerMethodCalls: 3 + recent.length + (signatures.length === 1000 ? 1 : 0),
-        providerEstimateNote: "This Devnet RPC does not return a per-request billed-credit meter.",
+        providerEstimateNote: "This RPC does not return a per-request billed-credit meter.",
         cacheHit: false,
         cached: false,
       };

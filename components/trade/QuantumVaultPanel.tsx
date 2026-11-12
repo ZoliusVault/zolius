@@ -257,7 +257,7 @@ export function QuantumVaultPanel({ wallet, onConnect }: { wallet: StoredWallet 
           {openedShare && <section style={box}>
             <h2 style={{ marginTop: 0 }}>Decrypted read-only snapshot</h2>
             {(openedShare.balances || []).map((balance, index) => <div key={`${balance.mint}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, borderTop: "1px solid var(--color-border)", padding: "9px 0", fontSize: 12 }}><code>{balance.mint}</code><strong>{String(balance.amount)} base units · {balance.decimals} decimals</strong></div>)}
-            {(openedShare.history || []).map((row, index) => <div key={`${row.signature}-${index}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.4fr", gap: 12, borderTop: "1px solid var(--color-border)", padding: "10px 0", fontSize: 12 }}><span>{row.kind} · {row.direction}</span><strong>{String(row.amount)} base units · {row.decimals} decimals</strong><a href={`https://explorer.solana.com/tx/${row.signature}?cluster=devnet`} target="_blank" rel="noreferrer" style={{ color: "var(--color-accent-ink)" }}>View transaction</a></div>)}
+            {(openedShare.history || []).map((row, index) => <div key={`${row.signature}-${index}`} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.4fr", gap: 12, borderTop: "1px solid var(--color-border)", padding: "10px 0", fontSize: 12 }}><span>{row.kind} · {row.direction}</span><strong>{String(row.amount)} base units · {row.decimals} decimals</strong><a href={`https://explorer.solana.com/tx/${row.signature}`} target="_blank" rel="noreferrer" style={{ color: "var(--color-accent-ink)" }}>View transaction</a></div>)}
           </section>}
 
           <section style={{ ...box, display: "grid", gap: 12 }}>

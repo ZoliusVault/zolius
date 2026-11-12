@@ -168,7 +168,7 @@ export function Navbar() {
                 height: "2.25rem",
                 flexShrink: 0,
               }}
-              title="Solana Devnet"
+              title="Solana Mainnet"
             >
               <SolanaLogo height={22} style={{ opacity: 0.92 }} />
             </div>
@@ -274,7 +274,7 @@ export function Navbar() {
                     >
                       <div>Connected via {walletMeta?.name || "Solana Wallet"}</div>
                       <div style={{ marginTop: "2px", color: "var(--color-text)", fontWeight: 600 }}>
-                        Solana Devnet
+                        Solana Mainnet
                       </div>
                     </div>
 
@@ -560,7 +560,7 @@ export function Navbar() {
                   color: "var(--color-muted)",
                 }}
               >
-                <span>Solana Devnet</span>
+                <span>Solana Mainnet</span>
                 <span>Privacy Ring</span>
               </div>
             </div>

@@ -46,11 +46,11 @@ async function forwardPrivacyRequest(
   const { path = [] } = await context.params;
   let upstreamUrl: URL;
   try {
-    const configuredEndpoint = process.env.SOLANA_DEVNET_RPC_URL;
-    if (!configuredEndpoint) throw new Error("missing Helius Devnet endpoint");
+    const configuredEndpoint = process.env.SOLANA_MAINNET_RPC_URL;
+    if (!configuredEndpoint) throw new Error("missing Helius Mainnet endpoint");
     upstreamUrl = resolveHeliusPrivacyUrl(configuredEndpoint, path);
   } catch {
-    return NextResponse.json({ error: "Helius Privacy Rings Devnet endpoint is misconfigured" }, { status: 503 });
+    return NextResponse.json({ error: "Helius Privacy Rings Mainnet endpoint is misconfigured" }, { status: 503 });
   }
 
   const incomingUrl = new URL(request.url);

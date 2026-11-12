@@ -106,7 +106,7 @@ export function WalletModal({
               fontWeight: 600,
             }}
           >
-            Solana Devnet
+            Solana Mainnet
           </span>
         </div>
         <button

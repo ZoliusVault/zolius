@@ -43,11 +43,11 @@ import { PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { detectSolana, type SolanaWalletId, type StoredWallet } from "@/lib/wallets";
 import { lockCreate, lockRelease, swapCancel, swapMake, swapTake } from "../solana/ts/wire.mjs";
 
-const INDEXER_URL =
-  process.env.NEXT_PUBLIC_SOLANA_INDEXER_URL || "https://d34xe1hqb2ibg2.cloudfront.net";
-const PROVER_URL =
-  process.env.NEXT_PUBLIC_SOLANA_PROVER_URL || "https://dd73hh473h6ha.cloudfront.net";
-const RPC_URL = "/api/solana/rpc";
+const privacyServiceUrl = () => new URL("/api/solana/privacy/v1/spr", window.location.origin).toString();
+const proverServiceUrl = privacyServiceUrl;
+function assertZoliusProgramMainnetDisabled(program: "Lock" | "Swap") {
+  throw new Error(`Zolius ${program} is not available on Solana Mainnet yet.`);
+}
 
 type SprSession = {
   client: Awaited<ReturnType<typeof createSprClient>>;
@@ -497,6 +497,7 @@ export async function createPrivateLock(
   stored: StoredWallet,
   input: { mint: string; amount: string; beneficiary: string; unlockAt: number; cancelable?: boolean },
 ): Promise<{ signature: string; unlockAt: number }> {
+  assertZoliusProgramMainnetDisabled("Lock");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -546,6 +547,7 @@ export async function createPrivateSwapOrder(
   stored: StoredWallet,
   input: { offerMint: string; offerAmount: string; requestMint: string; requestAmount: string; taker: string; expiresAt: number },
 ): Promise<{ signature: string; expiresAt: number; id: string }> {
+  assertZoliusProgramMainnetDisabled("Swap");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -604,6 +606,7 @@ export async function claimPrivateLock(
   stored: StoredWallet,
   input: { creator: string; id: string },
 ): Promise<{ signature: string }> {
+  assertZoliusProgramMainnetDisabled("Lock");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -656,6 +659,7 @@ export async function takePrivateSwapOrder(
   stored: StoredWallet,
   input: { maker: string; id: string },
 ): Promise<{ signature: string }> {
+  assertZoliusProgramMainnetDisabled("Swap");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -725,6 +729,7 @@ export async function cancelPrivateSwapOrder(
   stored: StoredWallet,
   input: { id: string },
 ): Promise<{ signature: string }> {
+  assertZoliusProgramMainnetDisabled("Swap");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -1041,7 +1046,7 @@ async function sendWithWallet(
     throw new Error("Wallet returned an invalid signed transaction.");
   }
   const raw = (signedValue as VersionedTransaction).serialize();
-  const response = await fetch(RPC_URL, {
+  const response = await fetch("/api/solana/rpc", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
@@ -1051,10 +1056,10 @@ async function sendWithWallet(
       params: [encodeBase64(raw), { encoding: "base64", preflightCommitment: "confirmed" }],
     }),
   });
-  if (!response.ok) throw new Error(`Devnet RPC returned HTTP ${response.status}`);
+  if (!response.ok) throw new Error(`Solana RPC returned HTTP ${response.status}`);
   const result = (await response.json()) as { result?: string; error?: { message?: string } };
-  if (result.error) throw new Error(result.error.message || "Devnet rejected the transaction.");
-  if (!result.result) throw new Error("Devnet did not return a transaction signature.");
+  if (result.error) throw new Error(result.error.message || "Mainnet rejected the transaction.");
+  if (!result.result) throw new Error("Mainnet did not return a transaction signature.");
   return result.result;
 }
 
@@ -1077,10 +1082,10 @@ async function openSession(stored: StoredWallet): Promise<SprSession> {
   }
 
   const client = await createSprClient({
-    solanaRpcUrl: RPC_URL,
-    indexerUrl: INDEXER_URL,
-    proverUrl: PROVER_URL,
-    proverTee: SignedTeePolicy.forNetwork("devnet"),
+    solanaRpcUrl: new URL("/api/solana/rpc", window.location.origin).toString(),
+    indexerUrl: privacyServiceUrl(),
+    proverUrl: proverServiceUrl(),
+    proverTee: SignedTeePolicy.forNetwork("mainnet"),
   });
   const ownerBytes = new PublicKey(stored.address).toBytes();
   const message = ed25519DerivationMessage(ownerBytes as Bytes32);

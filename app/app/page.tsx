@@ -60,16 +60,16 @@ export interface ZkNote {
   txSignature?: string;
 }
 
-const STORAGE_NOTES_KEY = "zolius_vault_notes_v1";
-const DEVNET_USDC_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+const STORAGE_NOTES_KEY = "zolius_vault_notes_mainnet_v1";
+const MAINNET_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const ZOLIUS_LOCK_SWAP_ENABLED = false;
 
 function WorkstationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const tabParam = searchParams.get("tab") as AppWorkstationTab | null;
-  const initialTab: AppWorkstationTab =
-    tabParam === "swap" || tabParam === "lock" || tabParam === "vault" ? tabParam : "assets";
+  const initialTab: AppWorkstationTab = tabParam === "vault" ? "vault" : "assets";
 
   const [activeTab, setActiveTab] = useState<AppWorkstationTab>(initialTab);
   const [wallet, setWallet] = useState<StoredWallet | null>(null);
@@ -124,12 +124,13 @@ function WorkstationContent() {
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   const switchTab = (tab: AppWorkstationTab) => {
+    if (tab === "swap" || tab === "lock") return;
     setActiveTab(tab);
     router.replace(`/app?tab=${tab}`, { scroll: false });
   };
 
   useEffect(() => {
-    setActiveTab(tabParam === "swap" || tabParam === "lock" || tabParam === "vault" ? tabParam : "assets");
+    setActiveTab(tabParam === "vault" ? "vault" : "assets");
   }, [tabParam]);
 
   useEffect(() => {
@@ -158,8 +159,8 @@ function WorkstationContent() {
     }
   };
 
-  // Sync real notes with Devnet indexer if wallet is connected
-  const syncWithDevnet = async () => {
+  // Sync real notes with Mainnet indexer if wallet is connected
+  const syncWithMainnet = async () => {
     if (!wallet) {
       setIsWalletModalOpen(true);
       return;
@@ -179,14 +180,14 @@ function WorkstationContent() {
           timestamp: Date.now(),
           spent: n.spent,
           leafIndex: n.leafIndex,
-          memo: "Helius Solana Privacy Ring note (Devnet)",
+          memo: "Helius Solana Privacy Ring note (Mainnet)",
         }));
         const nonSol = notes.filter((n) => n.asset !== "SOL");
         const merged = [...mapped, ...nonSol];
         saveNotesList(merged);
-        setSyncFeedback(`Synced ${res.notes.length} note(s) from Devnet indexer. Total: ${(Number(res.balanceLamports) / 1e9).toFixed(4)} SOL.`);
+        setSyncFeedback(`Synced ${res.notes.length} note(s) from Mainnet indexer. Total: ${(Number(res.balanceLamports) / 1e9).toFixed(4)} SOL.`);
       } else {
-        setSyncFeedback("Indexer sync complete. No private SOL notes found on this Devnet account.");
+        setSyncFeedback("Indexer sync complete. No private SOL notes found on this Mainnet account.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Sync failed";
@@ -210,14 +211,14 @@ function WorkstationContent() {
       return;
     }
     try {
-      const mint = shieldAsset === "SOL" ? "11111111111111111111111111111111" : shieldAsset === "USDC" ? DEVNET_USDC_MINT : splMint.trim();
+      const mint = shieldAsset === "SOL" ? "11111111111111111111111111111111" : shieldAsset === "USDC" ? MAINNET_USDC_MINT : splMint.trim();
       if (!mint) throw new Error("Paste a real SPL or Token-2022 mint address before depositing.");
       const res = await shieldPrivateAsset(wallet, mint, shieldAmount, shieldMemo.trim() || undefined);
-      setShieldSuccess(`Private deposit confirmed on Devnet. Signature: ${res.signature}`);
+      setShieldSuccess(`Private deposit confirmed on Mainnet. Signature: ${res.signature}`);
       setShieldAmount("");
       setShieldMemo("");
     } catch (err: unknown) {
-      setShieldError(err instanceof Error ? err.message : "Devnet transaction failed");
+      setShieldError(err instanceof Error ? err.message : "Mainnet transaction failed");
     } finally {
       setIsShielding(false);
     }
@@ -225,6 +226,7 @@ function WorkstationContent() {
 
   const handleSwapSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ZOLIUS_LOCK_SWAP_ENABLED) { setSwapError("Zolius Swap is not available on Mainnet yet."); return; }
     setSwapSuccess(null);
     setSwapError(null);
     if (!wallet) {
@@ -234,7 +236,7 @@ function WorkstationContent() {
     }
     const assetMint = (asset: "SOL" | "USDC" | "SPL") => asset === "SOL"
       ? "11111111111111111111111111111111"
-      : asset === "USDC" ? DEVNET_USDC_MINT : splMint.trim();
+      : asset === "USDC" ? MAINNET_USDC_MINT : splMint.trim();
     if (swapFrom === swapTo) {
       setSwapError("Choose two different assets for the OTC pair.");
       return;
@@ -268,6 +270,7 @@ function WorkstationContent() {
 
   const handleLockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ZOLIUS_LOCK_SWAP_ENABLED) { setLockError("Zolius Lock is not available on Mainnet yet."); return; }
     setLockSuccess(null);
     setLockError(null);
     if (!wallet) {
@@ -275,7 +278,7 @@ function WorkstationContent() {
       setIsWalletModalOpen(true);
       return;
     }
-    const mint = lockAsset === "SOL" ? "11111111111111111111111111111111" : lockAsset === "USDC" ? DEVNET_USDC_MINT : splMint.trim();
+    const mint = lockAsset === "SOL" ? "11111111111111111111111111111111" : lockAsset === "USDC" ? MAINNET_USDC_MINT : splMint.trim();
     if (!mint) {
       setLockError("Enter the SPL or Token-2022 mint before creating this lock.");
       return;
@@ -319,6 +322,7 @@ function WorkstationContent() {
   };
 
   const claimLock = async (lock: PrivateLockSummary) => {
+    if (!ZOLIUS_LOCK_SWAP_ENABLED) { setLockError("Zolius Lock is not available on Mainnet yet."); return; }
     if (!wallet) {
       setIsWalletModalOpen(true);
       return;
@@ -397,7 +401,7 @@ function WorkstationContent() {
       return;
     }
     try {
-      const mint = targetNote.asset === "SOL" ? "11111111111111111111111111111111" : targetNote.asset === "USDC" ? DEVNET_USDC_MINT : targetNote.splMint;
+      const mint = targetNote.asset === "SOL" ? "11111111111111111111111111111111" : targetNote.asset === "USDC" ? MAINNET_USDC_MINT : targetNote.splMint;
       if (!mint) throw new Error("This note does not contain a token mint. Sync real account history first.");
       const result = await withdrawPrivateAsset(wallet, mint, withdrawRecipient.trim(), targetNote.amount.replace(/,/g, ""));
       const updated = notes.map((n) => n.id === targetNote.id ? { ...n, spent: true, txSignature: result.signature } : n);
@@ -464,7 +468,7 @@ function WorkstationContent() {
             }}
           >
             <SolanaLogo height={15} />
-            <span>Solana Devnet // Canonical Privacy Rings</span>
+            <span>Solana Mainnet // Canonical Privacy Rings</span>
           </div>
           <h1
             style={{
@@ -545,7 +549,7 @@ function WorkstationContent() {
               color: "var(--color-muted)",
             }}
           >
-            <span>Solana Devnet</span>
+            <span>Solana Mainnet</span>
             <span style={{ opacity: 0.3 }}>/</span>
             <span>Groth16 ZK-SNARK</span>
             <span style={{ opacity: 0.3 }}>/</span>
@@ -623,8 +627,6 @@ function WorkstationContent() {
           >
             {[
               { id: "assets", label: "Privacy Rings", icon: ShieldCheck },
-              { id: "swap", label: "Zolius Swap", icon: ArrowLeftRight },
-              { id: "lock", label: "Zolius Lock", icon: Lock },
               { id: "vault", label: "Quantum Vault", icon: Wallet },
             ].map((tab) => {
               const isSelected = activeTab === tab.id;
@@ -778,7 +780,7 @@ function WorkstationContent() {
                       type="text"
                       value={splMint}
                       onChange={(e) => setSplMint(e.target.value)}
-                      placeholder="Paste a supported Devnet SPL or Token-2022 mint (Base58)"
+                      placeholder="Paste a supported Mainnet SPL or Token-2022 mint (Base58)"
                       style={{
                         width: "100%",
                         padding: "8px 12px",
@@ -883,7 +885,7 @@ function WorkstationContent() {
                 }}
               >
                 {isShielding
-                  ? "Generating Witness & Shielding on Devnet..."
+                  ? "Generating Witness & Shielding on Mainnet..."
                   : `Deposit & Shield ${shieldAmount || "0"} ${shieldAsset}`}
               </button>
 
@@ -1103,7 +1105,7 @@ function WorkstationContent() {
               {(swapFrom === "SPL" || swapTo === "SPL") && (
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>SPL / Token-2022 mint</label>
-                  <input type="text" value={splMint} onChange={(event) => setSplMint(event.target.value)} placeholder="Devnet token mint address" style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: "13px" }} />
+                  <input type="text" value={splMint} onChange={(event) => setSplMint(event.target.value)} placeholder="Mainnet token mint address" style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: "13px" }} />
                 </div>
               )}
 
@@ -1192,7 +1194,7 @@ function WorkstationContent() {
               {lockAsset === "SPL" && (
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--color-muted)", marginBottom: "6px" }}>SPL / Token-2022 mint</label>
-                  <input type="text" value={splMint} onChange={(event) => setSplMint(event.target.value)} placeholder="Devnet token mint address" style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: "13px" }} />
+                  <input type="text" value={splMint} onChange={(event) => setSplMint(event.target.value)} placeholder="Mainnet token mint address" style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontFamily: "var(--font-mono)", fontSize: "13px" }} />
                 </div>
               )}
 
@@ -1502,7 +1504,7 @@ function WorkstationContent() {
                 }}
               >
                 <AlertCircle size={15} style={{ flexShrink: 0 }} />
-                <span>Recommended: Use a freshly generated address on Devnet for maximum unlinkability.</span>
+                <span>Recommended: Use a freshly generated address on Mainnet for maximum unlinkability.</span>
               </div>
 
               <button
@@ -1517,7 +1519,7 @@ function WorkstationContent() {
                   cursor: isWithdrawing ? "wait" : "pointer",
                 }}
               >
-                {isWithdrawing ? "Generating Groth16 Proof & Broadcasting to Devnet..." : "Prove & Withdraw to Destination"}
+                {isWithdrawing ? "Generating Groth16 Proof & Broadcasting to Mainnet..." : "Prove & Withdraw to Destination"}
               </button>
 
               {withdrawSuccess && (
@@ -1575,7 +1577,7 @@ function WorkstationContent() {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                   <button
                     type="button"
-                    onClick={() => void syncWithDevnet()}
+                    onClick={() => void syncWithMainnet()}
                     disabled={isSyncingNotes}
                     className="lp-btn lp-btn--outline"
                     style={{
@@ -1694,9 +1696,9 @@ function WorkstationContent() {
 
                     {note.txSignature && (
                       <div style={{ fontSize: "11px", fontFamily: "var(--font-mono)", color: "#10b981", display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span>Devnet Tx:</span>
+                        <span>Mainnet Tx:</span>
                         <a
-                          href={`https://explorer.solana.com/tx/${note.txSignature}?cluster=devnet`}
+                          href={`https://explorer.solana.com/tx/${note.txSignature}`}
                           target="_blank"
                           rel="noreferrer"
                           style={{ color: "#FF8C00", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}

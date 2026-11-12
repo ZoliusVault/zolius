@@ -115,7 +115,7 @@ export const Footer: React.FC = () => {
               rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              <span>Solana Devnet</span>
+              <span>Solana Mainnet</span>
               <svg
                 aria-hidden="true"
                 width="14"

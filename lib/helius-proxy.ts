@@ -1,4 +1,4 @@
-const ALLOWED_PRIVACY_HOST = "devnet.helius-rpc.com";
+const ALLOWED_PRIVACY_HOST = "mainnet.helius-rpc.com";
 
 export function resolveHeliusPrivacyUrl(endpoint: string, pathSegments: readonly string[]): URL {
   const upstream = new URL(endpoint);
@@ -10,7 +10,7 @@ export function resolveHeliusPrivacyUrl(endpoint: string, pathSegments: readonly
     upstream.pathname !== "/" ||
     !upstream.searchParams.get("api-key")
   ) {
-    throw new Error("Configure a server-side Helius Devnet RPC URL with its API key.");
+    throw new Error("Configure a server-side Helius Mainnet RPC URL with its API key.");
   }
 
   if (

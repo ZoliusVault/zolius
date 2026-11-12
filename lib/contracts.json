@@ -1,9 +1,9 @@
 {
   "network": {
-    "name": "Solana Devnet",
-    "cluster": "devnet",
-    "appChainId": 46630,
-    "status": "development"
+    "name": "Solana Mainnet-Beta",
+    "cluster": "mainnet-beta",
+    "appChainId": 4663,
+    "status": "mainnet"
   },
   "programs": [
     {
@@ -12,41 +12,18 @@
       "kind": "Protocol dependency",
       "operator": "Helius",
       "address": "ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW",
-      "cluster": "devnet",
+      "cluster": "mainnet-beta",
       "buildStatus": "Helius-maintained",
-      "authority": "Helius",
-      "explorer": "https://explorer.solana.com/address/ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW?cluster=devnet",
+      "authority": "Not published",
+      "explorer": "https://explorer.solana.com/address/ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW",
       "docs": "https://www.helius.dev/docs/privacy"
-    },
-    {
-      "id": "zolius-lock",
-      "name": "Zolius Lock",
-      "kind": "Zolius program",
-      "operator": "Zolius Vault",
-      "address": "AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP",
-      "cluster": "devnet",
-      "buildStatus": "Build hash not published",
-      "authority": "35v7k3E9BTQKK5xzAmqdwN8jMrtM4inzCmRYV78ZWTt6",
-      "explorer": "https://explorer.solana.com/address/AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP?cluster=devnet",
-      "deployTx": "4Ubi3kxCUdK1YhMK2Au3HGLKpJEtuYuknizriHv8dcM4dhV2z5EhFdkMBkXcnPACvwPHagJxMmouJg9X2DVmP5da"
-    },
-    {
-      "id": "zolius-swap",
-      "name": "Zolius Swap",
-      "kind": "Zolius program",
-      "operator": "Zolius Vault",
-      "address": "HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u",
-      "cluster": "devnet",
-      "buildStatus": "Build hash not published",
-      "authority": "35v7k3E9BTQKK5xzAmqdwN8jMrtM4inzCmRYV78ZWTt6",
-      "explorer": "https://explorer.solana.com/address/HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u?cluster=devnet"
     }
   ],
   "token": {
     "name": "Zolius",
     "symbol": "ZOLIUS",
     "address": null,
-    "status": "No Devnet mint configured"
+    "status": "No Mainnet mint configured"
   },
   "treasury": {
     "name": "Treasury / Squads multisig",
@@ -80,14 +57,26 @@
     }
   ],
   "burns": {
-    "status": "No Devnet ZOLIUS token mint is configured; no Devnet burn total is published.",
+    "status": "No Mainnet ZOLIUS token mint is configured; no Mainnet burn total is published.",
     "totalBurned": null,
     "supply": null,
     "transactions": []
   },
   "reviews": [
-    { "name": "Certora", "logo": "/assets/logo/certora.png", "scope": "Helius Privacy Rings" },
-    { "name": "OtterSec", "logo": "/assets/logo/ottersec.png", "scope": "Helius Privacy Rings" },
-    { "name": "zkSecurity", "logo": "/assets/logo/zksecurity.svg", "scope": "Helius Privacy Rings" }
+    {
+      "name": "Certora",
+      "logo": "/assets/logo/certora.png",
+      "scope": "Helius Privacy Rings"
+    },
+    {
+      "name": "OtterSec",
+      "logo": "/assets/logo/ottersec.png",
+      "scope": "Helius Privacy Rings"
+    },
+    {
+      "name": "zkSecurity",
+      "logo": "/assets/logo/zksecurity.svg",
+      "scope": "Helius Privacy Rings"
+    }
   ]
 }

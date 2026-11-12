@@ -24,8 +24,8 @@ export function PageHero({
   );
 }
 
-export function DevnetBadge({ small = false }: { small?: boolean }) {
-  return <span className={`np-network${small ? " np-network--small" : ""}`}>SOLANA DEVNET</span>;
+export function MainnetBadge({ small = false }: { small?: boolean }) {
+  return <span className={`np-network${small ? " np-network--small" : ""}`}>SOLANA MAINNET</span>;
 }
 
 export function Panel({

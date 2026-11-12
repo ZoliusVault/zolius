@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     return errorResponse(null, -32601, "RPC request is invalid or method is not allowed");
   }
 
-  const upstreamUrl = process.env.SOLANA_DEVNET_RPC_URL || "https://api.devnet.solana.com";
+  const upstreamUrl = process.env.SOLANA_MAINNET_RPC_URL || "https://api.mainnet-beta.solana.com";
   let parsedUpstream: URL;
   try {
     parsedUpstream = new URL(upstreamUrl);
