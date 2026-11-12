@@ -32,7 +32,7 @@
     },
     {
       "id": "zolius-swap",
-      "name": "Zolius Swap / OTC",
+      "name": "Zolius Swap",
       "kind": "Zolius program",
       "operator": "Zolius Vault",
       "address": "HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u",
@@ -52,6 +52,38 @@
     "name": "Treasury / Squads multisig",
     "address": null,
     "status": "Not configured"
+  },
+  "changelog": [
+    {
+      "date": "2026-11-12T03:44:01.000Z",
+      "action": "Program upgrade",
+      "name": "Zolius Lock",
+      "address": "AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP",
+      "signature": "4Ubi3kxCUdK1YhMK2Au3HGLKpJEtuYuknizriHv8dcM4dhV2z5EhFdkMBkXcnPACvwPHagJxMmouJg9X2DVmP5da",
+      "slot": 521331605
+    },
+    {
+      "date": "2026-11-11T02:31:36.000Z",
+      "action": "Program deployment",
+      "name": "Zolius Lock",
+      "address": "AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP",
+      "signature": "2UKh8fEZ34qgiNCcUnh6JtCqdsXc4uFu52Q2CMsfkGNupVCaHQBocb6JBFn1Xub7t8ZwMjq9hiR4y2DRLTaNmN6X",
+      "slot": 520953596
+    },
+    {
+      "date": "2026-11-11T02:31:56.000Z",
+      "action": "Program deployment",
+      "name": "Zolius Swap",
+      "address": "HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u",
+      "signature": "ot4wBdbqhtiX2BvDwKbgsoeQjUDeBZWKztkEEFYVhmhH8QAig41cEZcXTFdYMA5LnWcfx6R9aAXMLtms8LFmBZ8",
+      "slot": 520953678
+    }
+  ],
+  "burns": {
+    "status": "No Devnet ZOLIUS token mint is configured; no Devnet burn total is published.",
+    "totalBurned": null,
+    "supply": null,
+    "transactions": []
   },
   "reviews": [
     { "name": "Certora", "logo": "/assets/logo/certora.png", "scope": "Helius Privacy Rings" },

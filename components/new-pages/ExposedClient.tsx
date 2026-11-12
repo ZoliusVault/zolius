@@ -9,7 +9,7 @@ import { Panel } from "./Shared";
 type Exposure = {
   address: string; network: string; solUsd: number; balance: { sol: number; lamports: number; usd: number; tokens: { mint: string; symbol: string; amount: number; decimals: number; usd: number }[] };
   history: { count: number; countLabel: string; oldestScannedAt: number | null; recent: { signature: string; slot: number; blockTime: number | null; failed: boolean; counterparties: string[]; transfers: string[] }[] };
-  counterparties: { address: string; count: number }[]; activity: { busiestHourUtc: number; busiestDayUtc: number; sampleSize: number }; score: number; scoreFormula: string; estimatedCredits: number;
+  counterparties: { address: string; count: number }[]; activity: { busiestHourUtc: number; busiestDayUtc: number; sampleSize: number }; score: number; scoreFormula: string; providerMethodCalls: number; providerEstimateNote: string; cacheHit: boolean;
 };
 
 const short = (value: string) => `${value.slice(0, 5)}…${value.slice(-5)}`;
@@ -71,7 +71,7 @@ export default function ExposedClient() {
         {data.history.recent.length ? <div className="np-table-wrap"><table className="np-table"><thead><tr><th>Signature</th><th>Time (UTC)</th><th>Visible amounts</th><th>Slot</th><th>Status</th></tr></thead><tbody>{data.history.recent.map((tx) => <tr key={tx.signature}><td><a className="np-external" href={`https://explorer.solana.com/tx/${tx.signature}?cluster=devnet`} target="_blank" rel="noreferrer">{short(tx.signature)}<ExternalLink size={12} /></a></td><td>{tx.blockTime ? new Date(tx.blockTime * 1000).toISOString().replace("T", " ").slice(0, 19) : "—"}</td><td>{tx.transfers.length ? tx.transfers.join(" · ") : "Not parsed"}</td><td>{tx.slot}</td><td>{tx.failed ? "Failed" : "Confirmed"}</td></tr>)}</tbody></table></div> : <p className="np-muted">No confirmed transaction history found.</p>}
         {isOwn && <div className="np-actions"><button className="np-button-secondary" onClick={() => void copyShare()}><Share2 size={14} />{copied ? "Copied" : "Share my score"}</button><span className="np-small">Share text excludes your full address.</span></div>}
       </Panel>
-      <Panel eyebrow="Method + limits" title="How this score works"><p className="np-muted">{data.scoreFormula}</p><p className="np-small">Read-only Devnet scan, up to 1,000 signatures. Cached in memory for five minutes. Estimated Helius cost for this scan: about {data.estimatedCredits} credits (DAS holdings plus RPC reads); actual provider usage may differ.</p><p className="np-muted"><strong>This is what anyone can see. Forever.</strong></p><div className="np-actions"><Link className="np-button" href="/app">Seal your next transfer<ArrowRight size={14} /></Link></div></Panel>
+      <Panel eyebrow="Method + limits" title="How this score works"><p className="np-muted">{data.scoreFormula}</p><p className="np-small">Read-only Devnet scan, up to 1,000 signatures. Cached in memory for five minutes. {data.cacheHit ? "This result came from cache and made no provider calls." : `This scan used ${data.providerMethodCalls} provider method calls.`} {data.providerEstimateNote} Check the Helius dashboard for billed credits; the app does not claim an unverified per-query credit estimate.</p><p className="np-muted"><strong>This is what anyone can see. Forever.</strong></p><div className="np-actions"><Link className="np-button" href="/app">Seal your next transfer<ArrowRight size={14} /></Link></div></Panel>
     </>}
   </div>;
 }

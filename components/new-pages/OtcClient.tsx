@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeftRight, Clock3, Copy, LockKeyhole } from "lucide-react";
 import { DevnetBadge, Panel, ExplorerLink } from "./Shared";
 import { loadWallet, subscribeWalletChange } from "@/lib/wallets";
-import { createPrivateSwapOrder, readPrivateSwapOrders, takePrivateSwapOrder } from "@/lib/helius-spr-browser";
+import { cancelPrivateSwapOrder, createPrivateSwapOrder, readPrivateSwapOrders, takePrivateSwapOrder } from "@/lib/helius-spr-browser";
 import { SOL_MINT } from "@heliuslabs/spr";
 
 const SOL = SOL_MINT as string;
@@ -24,8 +24,16 @@ export default function OtcClient() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState("");
+  const [makerOrders, setMakerOrders] = useState<Order[]>([]);
 
   useEffect(() => { const sync = () => setWallet(loadWallet()); sync(); return subscribeWalletChange(sync); }, []);
+
+  useEffect(() => {
+    if (!wallet) { setMakerOrders([]); return; }
+    let active = true;
+    readPrivateSwapOrders(wallet, wallet.address).then(rows => { if (active) setMakerOrders(rows); }).catch(() => { if (active) setMakerOrders([]); });
+    return () => { active = false; };
+  }, [wallet, signature]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -50,9 +58,10 @@ export default function OtcClient() {
       const expiresAt = Math.floor(Date.now() / 1000) + Number(expiresHours) * 3600;
       const result = await createPrivateSwapOrder(wallet, { offerMint, offerAmount, requestMint, requestAmount, taker, expiresAt });
       setSignature(result.signature);
+      setMakerOrders(current => [{ id: result.id, maker: wallet.address, offerMint, offerAmount, requestMint, requestAmount, expiresAt: result.expiresAt }, ...current]);
       const share = `${location.origin}/otc?maker=${encodeURIComponent(wallet.address)}&id=${encodeURIComponent(result.id)}`;
       setLink(share);
-      setStatus("Order created and escrowed immediately. Share the invitation link with the named taker; do not assume expiry returns the funds automatically.");
+      setStatus("Order created. The maker's private offer is escrowed immediately by the current Devnet Swap program. Cancel it below to recover the funds if it is not accepted.");
     } catch (error) { setStatus(error instanceof Error ? error.message : "Could not create OTC order."); }
     finally { setBusy(false); }
   };
@@ -65,6 +74,18 @@ export default function OtcClient() {
       setSignature(result.signature);
       setStatus("Private OTC settlement confirmed. Sync both wallets to refresh balances.");
     } catch (error) { setStatus(error instanceof Error ? error.message : "Settlement failed."); }
+    finally { setBusy(false); }
+  };
+
+  const cancel = async (id: string) => {
+    if (!wallet) return;
+    setBusy(true); setStatus("");
+    try {
+      const result = await cancelPrivateSwapOrder(wallet, { id });
+      setSignature(result.signature);
+      setMakerOrders(current => current.filter(item => item.id !== id));
+      setStatus("Maker refund confirmed. The private offer was released back to your balance.");
+    } catch (error) { setStatus(error instanceof Error ? error.message : "Could not refund this private offer."); }
     finally { setBusy(false); }
   };
 
@@ -87,7 +108,7 @@ export default function OtcClient() {
         <div className="np-field"><label>Request amount</label><input className="np-input" inputMode="decimal" value={requestAmount} onChange={e => setRequestAmount(e.target.value)} placeholder="100" /></div>
         <div className="np-field"><label>Registered taker wallet</label><input className="np-input" value={taker} onChange={e => setTaker(e.target.value)} placeholder="Taker's Solana address" /></div>
         <div className="np-field"><label>Expires in hours</label><select className="np-select" value={expiresHours} onChange={e => setExpiresHours(e.target.value)}><option value="1">1 hour</option><option value="6">6 hours</option><option value="24">24 hours</option><option value="72">72 hours</option></select></div>
-        <div className="np-note"><strong>Escrow starts at creation.</strong> This deployed Zolius Swap program escrows the maker's offer as soon as you create the order. The taker cannot accept after expiry, but this UI does not expose the maker's cancel/refund action. Use Devnet test funds only and do not treat an expired quote as automatically refunded.</div>
+        <div className="np-note"><strong>Escrow starts at creation.</strong> The maker's private offer is locked immediately by the current Devnet Swap program. This does not match the brief's no-lock-before-acceptance requirement; use Devnet test funds and cancel an unaccepted quote to recover it.</div>
         <button className="np-button" style={{marginTop:14}} disabled={!wallet || busy || !offerAmount || !requestAmount || !taker} onClick={() => void create()}><LockKeyhole size={15}/>{busy ? "Creating…" : "Create & escrow quote"}</button>
       </> : <p className="np-muted">{busy ? "Decrypting invitation for this wallet…" : "Could not load this invitation."}</p>}
       {link && <div className="np-note" style={{marginTop:14}}>Share this link only with your taker. <a className="np-address" href={link}>{link}</a><button className="np-button-secondary" style={{marginTop:10}} onClick={() => navigator.clipboard.writeText(link)}><Copy size={14}/>Copy invitation</button></div>}
@@ -100,7 +121,8 @@ export default function OtcClient() {
         <div className="np-step"><strong>Both sides stay private</strong><span>Asset and amount are shielded; maker and taker identities remain visible to the program.</span></div>
         <div className="np-step"><strong>Private balances required</strong><span>Deposits from public wallets reveal the asset, amount and sender on-chain.</span></div>
       </div>
-      <div className="np-note" style={{marginTop:18}}>Zolius Swap settles both sides atomically through its existing Devnet program. The program rejects settlement at or after the expiry timestamp. This UI has no maker cancellation/refund control yet.</div>
+      <div className="np-note" style={{marginTop:18}}>The current Devnet Swap program settles both sides atomically and rejects settlement at or after expiry. Maker cancellation is available below. Its create step still escrows the maker's offer before acceptance, so the no-escrow requirement remains open.</div>
+      {!quoteMode && makerOrders.length > 0 && <div style={{ marginTop: 20 }}><div className="np-overline">Your private offers</div><ul className="np-list">{makerOrders.map(item => <li key={item.id}><span><strong>{item.offerAmount}</strong><br/><span className="np-small">request {item.requestAmount} Â· expires {new Date(item.expiresAt * 1000).toLocaleString()}</span></span><button className="np-button-secondary" disabled={busy} onClick={() => void cancel(item.id)}>Cancel & refund</button></li>)}</ul></div>}
     </Panel>
   </div>;
 }

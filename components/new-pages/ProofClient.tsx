@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink, Eye, LoaderCircle, Search } from "lucide-react";
 import { loadWallet } from "@/lib/wallets";
 import { readPrivatePortfolio } from "@/lib/helius-spr-browser";
@@ -53,6 +53,8 @@ export default function ProofClient() {
   const [decrypted, setDecrypted] = useState<{ amount: string; direction: string; asset: string } | null>(null);
   const [decrypting, setDecrypting] = useState(false);
 
+  useEffect(() => { void loadDemo(); }, []);
+
   const loadDemo = async () => {
     setLoading(true); setError(""); setDecrypted(null);
     try {
@@ -81,8 +83,8 @@ export default function ProofClient() {
   const right = vault ? summarize(vault) : null;
   return <div className="np-grid">
     <Panel eyebrow="Try your own Devnet transaction" title="Load a matched pair">
-      <div className="np-grid np-grid--2"><div className="np-field"><label htmlFor="glass-signature">PUBLIC / GLASS SIGNATURE</label><input id="glass-signature" className="np-input" value={glassSignature} onChange={(event) => setGlassSignature(event.target.value)} /></div><div className="np-field"><label htmlFor="vault-signature">ZOLIUS / VAULT SIGNATURE</label><input id="vault-signature" className="np-input" value={vaultSignature} onChange={(event) => setVaultSignature(event.target.value)} /></div></div>
-      <div className="np-actions"><button className="np-button" onClick={() => void loadDemo()} disabled={loading || !glassSignature || !vaultSignature}>{loading ? <LoaderCircle className="animate-spin" size={14} /> : <Search size={14} />}Load transactions</button><span className="np-small">Read-only requests through the server RPC proxy.</span></div>
+      <div className="np-grid np-grid--2"><div className="np-field"><label htmlFor="glass-signature">PUBLIC / GLASS DEMO SIGNATURE</label><input id="glass-signature" className="np-input" value={glassSignature} readOnly /></div><div className="np-field"><label htmlFor="vault-signature">YOUR ZOLIUS / VAULT SIGNATURE</label><input id="vault-signature" className="np-input" value={vaultSignature} onChange={(event) => setVaultSignature(event.target.value)} placeholder="Paste your Devnet transaction signature" /></div></div>
+      <div className="np-actions"><button className="np-button" onClick={() => void loadDemo()} disabled={loading || !glassSignature || !vaultSignature}>{loading ? <LoaderCircle className="animate-spin" size={14} /> : <Search size={14} />}{loading ? "Loading" : "Load demo / compare my transaction"}</button><span className="np-small">Demo pair loads automatically. Read-only requests use the server RPC proxy.</span></div>
       {error && <p className="np-error np-muted" role="alert">{error}</p>}
     </Panel>
     {glass && vault && <div className="np-grid np-grid--2">

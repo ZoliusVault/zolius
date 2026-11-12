@@ -89,6 +89,86 @@ async function importAeadKey(sharedSecret: Uint8Array): Promise<CryptoKey> {
   return crypto.subtle.importKey("raw", buffer(sharedSecret), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
 }
 
+export async function encryptInvoiceForPayee(
+  owner: string,
+  recipientPublicKey: string,
+  payload: unknown,
+  expiresAt: number,
+): Promise<{ envelope: VaultEnvelope; linkKey: string }> {
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) throw new Error("Invoice expiration must be in the future.");
+  const publicKey = fromBase64(recipientPublicKey);
+  if (publicKey.length !== ml_kem768_x25519.lengths.publicKey) throw new Error("Recipient X-Wing public key has an invalid length.");
+  const envelope: VaultEnvelope = {
+    version: 1,
+    scheme: "X-Wing-ML-KEM-768-X25519+AES-256-GCM",
+    owner,
+    recipient: owner,
+    purpose: "note",
+    createdAt: Date.now(),
+    expiresAt,
+    encapsulation: "",
+    iv: "",
+    ciphertext: "",
+  };
+  const { cipherText, sharedSecret } = ml_kem768_x25519.encapsulate(publicKey);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  try {
+    const key = await importAeadKey(sharedSecret);
+    const encrypted = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: buffer(iv), additionalData: buffer(aad(envelope)), tagLength: 128 },
+      key,
+      buffer(encoder.encode(serializeVaultPayload(payload))),
+    );
+    return {
+      envelope: { ...envelope, encapsulation: toBase64(cipherText), iv: toBase64(iv), ciphertext: toBase64(new Uint8Array(encrypted)) },
+      linkKey: toBase64(sharedSecret),
+    };
+  } finally {
+    sharedSecret.fill(0);
+  }
+}
+
+async function decryptWithSecret(envelope: VaultEnvelope, sharedSecret: Uint8Array): Promise<unknown> {
+  if (envelope.version !== 1 || envelope.scheme !== "X-Wing-ML-KEM-768-X25519+AES-256-GCM" || envelope.purpose !== "note") {
+    throw new Error("Unsupported invoice encryption format.");
+  }
+  if (envelope.expiresAt !== null && Date.now() >= envelope.expiresAt) throw new Error("This invoice has expired.");
+  const key = await importAeadKey(sharedSecret);
+  const plain = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: buffer(fromBase64(envelope.iv)), additionalData: buffer(aad(envelope)), tagLength: 128 },
+    key,
+    buffer(fromBase64(envelope.ciphertext)),
+  );
+  return parseVaultPayload(new TextDecoder().decode(plain));
+}
+
+export async function decryptInvoiceFromLink(envelope: VaultEnvelope, linkKey: string): Promise<unknown> {
+  const sharedSecret = fromBase64(linkKey);
+  if (sharedSecret.length !== 32) throw new Error("This invoice link has an invalid decryption key.");
+  try {
+    return await decryptWithSecret(envelope, sharedSecret);
+  } catch {
+    throw new Error("Unable to decrypt this invoice. The link may have been changed or expired.");
+  } finally {
+    sharedSecret.fill(0);
+  }
+}
+
+export async function decryptInvoiceForWallet(wallet: StoredWallet, envelope: VaultEnvelope): Promise<unknown> {
+  if (envelope.recipient !== wallet.address) throw new Error("This invoice belongs to a different wallet.");
+  const keys = await deriveKeys(wallet);
+  let sharedSecret: Uint8Array | null = null;
+  try {
+    sharedSecret = ml_kem768_x25519.decapsulate(fromBase64(envelope.encapsulation), keys.secretKey);
+    return await decryptWithSecret(envelope, sharedSecret);
+  } catch {
+    throw new Error("Unable to decrypt this invoice with the connected wallet.");
+  } finally {
+    sharedSecret?.fill(0);
+    keys.secretKey.fill(0);
+  }
+}
+
 export async function getVaultPublicKey(wallet: StoredWallet): Promise<string> {
   const keys = await deriveKeys(wallet);
   try {
@@ -96,6 +176,33 @@ export async function getVaultPublicKey(wallet: StoredWallet): Promise<string> {
   } finally {
     keys.secretKey.fill(0);
   }
+}
+
+export async function signPayHandleRegistration(wallet: StoredWallet, handle: string, vaultPublicKey: string): Promise<string> {
+  const provider = detectSolana(wallet.id);
+  if (!provider?.signMessage) throw new Error("Reconnect a Solana wallet that supports message signing.");
+  if (provider.publicKey?.toBase58() !== wallet.address) throw new Error("Connected wallet changed. Reconnect before registering a handle.");
+  const message = encoder.encode(`ZOLIUS/pay/handle/v1\n${handle}\n${wallet.address}\n${vaultPublicKey}`);
+  const result = await provider.signMessage(message, "utf8");
+  const signature = result instanceof Uint8Array ? result : result.signature;
+  if (!(signature instanceof Uint8Array) || signature.length !== 64) throw new Error("Wallet returned an invalid handle signature.");
+  try {
+    return toBase64(signature);
+  } finally {
+    signature.fill(0);
+  }
+}
+
+export async function signInvoicePaid(wallet: StoredWallet, invoiceId: string): Promise<string> {
+  const provider = detectSolana(wallet.id);
+  if (!provider?.signMessage) throw new Error("Reconnect a Solana wallet that supports message signing.");
+  if (provider.publicKey?.toBase58() !== wallet.address) throw new Error("Connected wallet changed. Reconnect before confirming payment.");
+  const message = encoder.encode(`ZOLIUS/pay/invoice-paid/v1\n${invoiceId}\n${wallet.address}`);
+  const result = await provider.signMessage(message, "utf8");
+  const signature = result instanceof Uint8Array ? result : result.signature;
+  if (!(signature instanceof Uint8Array) || signature.length !== 64) throw new Error("Wallet returned an invalid payment confirmation signature.");
+  try { return toBase64(signature); }
+  finally { signature.fill(0); }
 }
 
 export async function encryptForWallet(

@@ -41,7 +41,7 @@ import {
 } from "@solana/kit";
 import { PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { detectSolana, type SolanaWalletId, type StoredWallet } from "@/lib/wallets";
-import { lockCreate, lockRelease, swapMake, swapTake } from "../solana/ts/wire.mjs";
+import { lockCreate, lockRelease, swapCancel, swapMake, swapTake } from "../solana/ts/wire.mjs";
 
 const INDEXER_URL =
   process.env.NEXT_PUBLIC_SOLANA_INDEXER_URL || "https://d34xe1hqb2ibg2.cloudfront.net";
@@ -71,6 +71,7 @@ type ZkProgramModule = {
   claimLockTransaction?: (inputs: unknown, sender: Uint8Array, payer: string) => ProgramTransactionLike;
   makeOrderTransaction?: (inputs: unknown, sender: Uint8Array, payer: string) => ProgramTransactionLike;
   takeOrderTransaction?: (inputs: unknown, sender: Uint8Array, payer: string) => ProgramTransactionLike;
+  cancelOrderTransaction?: (inputs: unknown, sender: Uint8Array, payer: string) => ProgramTransactionLike;
   lockTermsDataUtxo?: (utxo: unknown) => unknown;
   orderTermsDataUtxo?: (utxo: unknown) => unknown;
 };
@@ -211,6 +212,15 @@ export async function readPrivatePortfolio(stored: StoredWallet): Promise<Privat
   try {
     await syncSession(session);
     return await portfolioForSession(session);
+  } finally {
+    destroySession(session);
+  }
+}
+
+export async function ensurePrivacyWalletRegistered(stored: StoredWallet): Promise<void> {
+  const session = await openSession(stored);
+  try {
+    await ensureRegistered(session);
   } finally {
     destroySession(session);
   }
@@ -711,6 +721,48 @@ export async function takePrivateSwapOrder(
   }
 }
 
+export async function cancelPrivateSwapOrder(
+  stored: StoredWallet,
+  input: { id: string },
+): Promise<{ signature: string }> {
+  const session = await openSession(stored);
+  try {
+    await syncSession(session);
+    const outputs = await recoverProgramOutputs(session, session.address, "swap");
+    const order = outputs.find((output) => output.id === input.id);
+    if (!order) throw new Error("This OTC order is already settled or cannot be recovered by this wallet.");
+    const requestMint = requestedProgramMint(order.data.requestedMint, session);
+    const module = await loadProgramWasm("swap");
+    if (!module.cancelOrderTransaction) throw new Error("Swap refund builder is missing from the generated WASM module.");
+    const terms = {
+      ...order.data,
+      requestedMint: Mint.fromRegistry(session.wallet.registry, requestMint),
+      requestedAmount: BigInt(order.data.requestedAmount),
+      expiry: BigInt(order.data.expiry),
+      takerIdentity: Array.from(order.data.takerIdentity as Uint8Array),
+    };
+    const build = bindProgramTransaction(serializeProofAssignment(module.cancelOrderTransaction), { assets: session.wallet.registry });
+    const prepared = await build({
+      private: { txContext: { outputTreeId: order.utxo.treeId }, order: order.utxo, terms },
+      public: { makerIdentity: signerIdentity(session.address).field },
+    }, session.wallet.identity.toBytes(), session.address as Address);
+    const { proof } = await proveProgramAction("swap", "cancel_order", prepared);
+    const signature = await submitProgramTransaction({
+      session,
+      program: SWAP_PROGRAM_ID,
+      pdaSeed: "zolius_order",
+      action: "swap-cancel",
+      prepared,
+      proof,
+      viewingPubkey: session.wallet.identity.viewingPublicKey.toBytes(),
+      ownerSigners: true,
+    });
+    return { signature };
+  } finally {
+    destroySession(session);
+  }
+}
+
 export { formatTokenAmount };
 
 function toHex(bytes: Uint8Array): string {
@@ -822,7 +874,7 @@ async function submitProgramTransaction(input: {
   session: SprSession;
   program: Address;
   pdaSeed: string;
-  action: "lock-create" | "lock-claim" | "swap-make" | "swap-take";
+  action: "lock-create" | "lock-claim" | "swap-make" | "swap-take" | "swap-cancel";
   pdaOwner?: string;
   prepared: ProgramTransactionLike;
   proof: { a: Uint8Array; b: Uint8Array; c: Uint8Array };
@@ -887,7 +939,7 @@ async function submitProgramTransaction(input: {
       authority.destroy();
       programNullifierKey.destroy();
     }
-  } else if (action === "swap-take") {
+  } else if (action === "swap-take" || action === "swap-cancel") {
     const programNullifierKey = ProgramOwner.nullifierKey();
     const programOwner = await ProgramOwner.find([pdaSeed, new PublicKey(pdaActor).toBytes()], program);
     const ownerHash = BigInt(`0x${toHex(programOwner.publicKey().ownerProofInputHash())}`);
@@ -943,7 +995,9 @@ async function submitProgramTransaction(input: {
       ? lockRelease({ action: "claim", proof, creator: release?.creator || new Uint8Array(32), unlock: release?.unlock || 0n, bump, spp })
       : action === "swap-make"
         ? swapMake({ proof, viewingPubkey, bump, spp })
-        : swapTake({ proof, maker: maker || new Uint8Array(32), bump, spp });
+        : action === "swap-cancel"
+          ? swapCancel({ proof, bump, spp })
+          : swapTake({ proof, maker: maker || new Uint8Array(32), bump, spp });
   const instruction = {
     programAddress: program,
     accounts: [

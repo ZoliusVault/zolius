@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   if (bucket && now - bucket.start < WINDOW && bucket.count >= MAX_PER_MINUTE) return response({ error: "Search limit reached. Try again in a minute." }, 429);
   limits.set(rateKey, !bucket || now - bucket.start >= WINDOW ? { start: now, count: 1 } : { ...bucket, count: bucket.count + 1 });
   const cached = cache.get(owner);
-  if (cached && cached.expires > now) return response(cached.data);
+  if (cached && cached.expires > now) return response({ ...(cached.data as Record<string, unknown>), providerMethodCalls: 0, cacheHit: true });
 
   try {
     const controller = new AbortController();
@@ -127,7 +127,10 @@ export async function POST(req: NextRequest) {
         activity: { busiestHourUtc: maxBucket(hours), busiestDayUtc: maxBucket(days), sampleSize: recent.length },
         score: shortScore(txCount, balanceUsd, partnerCounts.size),
         scoreFormula: "Activity 0–40 (log₁₀ of scanned transactions) + visible portfolio value 0–30 (log₁₀ USD) + distinct counterparties 0–30 (1.5 points each). Max scan: 1,000 signatures; activity patterns use the 20 newest parsed transactions.",
-        estimatedCredits: 34, cached: false,
+        providerMethodCalls: 3 + recent.length + (signatures.length === 1000 ? 1 : 0),
+        providerEstimateNote: "This Devnet RPC does not return a per-request billed-credit meter.",
+        cacheHit: false,
+        cached: false,
       };
       cache.set(owner, { expires: now + TTL, data: result });
       if (cache.size > 500) { for (const [key, entry] of cache) if (entry.expires <= now) cache.delete(key); }

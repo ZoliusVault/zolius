@@ -79,6 +79,15 @@ export default function ContractsRegistry() {
           <div className="np-grid np-grid--3"><div className="np-stat"><div className="np-stat-label">Mainnet token mint</div><div className="np-stat-value">Not configured</div></div><div className="np-stat"><div className="np-stat-label">Zolius programs</div><div className="np-stat-value">Devnet only</div></div><div className="np-stat"><div className="np-stat-label">Upgrade multisig</div><div className="np-stat-value">Not configured</div></div></div>
           <p className="np-muted" style={{ marginTop: 16 }}>This registry is generated from <code>lib/contracts.json</code>. Mainnet addresses will be added only after deployment receipts and authorities are confirmed.</p>
         </Panel>
+        <Panel eyebrow="Deployment history / UTC" title="Devnet changelog">
+          <ul className="np-list">{registry.changelog.map((change) => <li key={change.signature}><span><strong>{change.action}: {change.name}</strong><br/><span className="np-small">{new Date(change.date).toISOString().replace("T", " ").replace(".000Z", " UTC")} Â· slot {change.slot}</span></span><a className="np-external" href={`https://explorer.solana.com/tx/${change.signature}?cluster=devnet`} target="_blank" rel="noreferrer">Transaction <ExternalLink size={12}/></a></li>)}</ul>
+          <p className="np-small">Entries are read from the same contracts.json file as the registry. This is not the Mainnet changelog.</p>
+        </Panel>
+        <Panel eyebrow="Token supply events" title="Devnet burns">
+          <p className="np-muted">{registry.burns.status}</p>
+          <div className="np-grid np-grid--2"><div className="np-stat"><div className="np-stat-label">Total burned</div><div className="np-stat-value">Not available</div></div><div className="np-stat"><div className="np-stat-label">Current supply</div><div className="np-stat-value">Not available</div></div></div>
+          <div className="np-actions"><a className="np-button-secondary" href="/burn">Open burn page <ExternalLink size={13}/></a></div>
+        </Panel>
       </div>
       <PageBottomLinks />
     </div>
