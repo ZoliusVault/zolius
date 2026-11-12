@@ -13,44 +13,52 @@ const destinations = [
   {
     href: "/contracts",
     icon: Landmark,
-    category: "PROTOCOL",
+    category: "INSPECT",
     title: "Solana Programs",
-    description: "Inspect deployed program addresses, verification details, and dependencies.",
+    description: "Program addresses, verification records, and the privacy stack behind each route.",
+    theme: "programs",
   },
   {
     href: "/exposed",
     icon: ScanSearch,
-    category: "WALLET TOOL",
-    title: "Exposure Checker",
-    description: "See the token balances and on-chain activity that a wallet makes public.",
+    category: "INVESTIGATE",
+    title: "Wallet Exposure",
+    description: "Read the balances and activity that remain visible on a public address.",
+    theme: "exposure",
   },
   {
     href: "/proof",
     icon: Eye,
-    category: "LEARN",
+    category: "UNDERSTAND PRIVACY",
     title: "Glass vs Vault",
-    description: "Compare what a public transfer reveals with a confidential Ring transfer.",
+    description: "See what the chain reveals in a public transfer, then compare it with a Zolius private transfer.",
+    theme: "proof",
+    wide: true,
   },
   {
     href: "/pay",
     icon: Fingerprint,
-    category: "PAYMENTS",
+    category: "REQUEST",
     title: "Zolius Pay",
-    description: "Create a payment request for a confidential transfer.",
+    description: "Create a payment request designed for a confidential balance transfer.",
+    theme: "pay",
   },
   {
     href: "/otc",
     icon: ArrowLeftRight,
-    category: "PRIVATE MARKETS",
+    category: "SETTLE PRIVATELY",
     title: "Private OTC",
-    description: "Arrange a negotiated transfer between private balances.",
+    description: "Settle a negotiated amount directly between private balances.",
+    theme: "otc",
   },
   {
     href: "/agents",
     icon: Bot,
-    category: "RESEARCH",
+    category: "OWNER CONTROL",
     title: "Agent Payments",
-    description: "Explore owner-auditable private spending for autonomous agents.",
+    description: "Explore a path to private agent spending with owner-visible controls.",
+    theme: "agents",
+    wide: true,
   },
 ];
 
@@ -60,23 +68,33 @@ export function ExplorePagesSection() {
       <div className="landing-explore__inner">
         <header className="landing-explore__heading">
           <div>
-            <p className="landing-explore__eyebrow">ZOLIUS DIRECTORY / PRODUCTS &amp; TOOLS</p>
-            <h2 id="landing-explore-title">Explore the protocol</h2>
+            <p className="landing-explore__eyebrow"><span aria-hidden="true" />ZOLIUS / QUANTUM PRIVACY STACK</p>
+            <h2 id="landing-explore-title">Enter the privacy stack.</h2>
           </div>
-          <p>Choose a destination. Each page has one clear job and a direct path back to the vault.</p>
+          <p>Six purpose-built instruments. One route into confidential finance on Solana.</p>
         </header>
 
         <div className="landing-explore__grid">
-          {destinations.map(({ href, icon: Icon, category, title, description }) => (
-            <Link className="landing-explore__card" href={href} key={href}>
-              <div className="landing-explore__card-top">
-                <span className="landing-explore__icon"><Icon size={18} strokeWidth={1.7} /></span>
-                <span className="landing-explore__category">{category}</span>
-                <ArrowUpRight className="landing-explore__arrow" size={18} strokeWidth={1.7} aria-hidden="true" />
+          {destinations.map(({ href, icon: Icon, category, title, description, theme, wide }) => (
+            <Link
+              className={`landing-explore__card landing-explore__card--${theme}${wide ? " landing-explore__card--wide" : ""}`}
+              href={href}
+              key={href}
+            >
+              <div className="landing-explore__art" aria-hidden="true">
+                <span className="landing-explore__orbit landing-explore__orbit--one" />
+                <span className="landing-explore__orbit landing-explore__orbit--two" />
+                <span className="landing-explore__art-core"><Icon size={27} strokeWidth={1.35} /></span>
               </div>
-              <h3>{title}</h3>
-              <p>{description}</p>
-              <span className="landing-explore__route">zoliusvault.tech{href}</span>
+              <div className="landing-explore__card-copy">
+                <span className="landing-explore__category">{category}</span>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </div>
+              <span className="landing-explore__open">
+                <span>OPEN MODULE</span>
+                <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
+              </span>
             </Link>
           ))}
         </div>
