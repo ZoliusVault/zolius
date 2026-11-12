@@ -1,4 +1,4 @@
-.np-page { max-width: 1180px; margin: 0 auto; padding: 28px 0 64px; color: var(--color-text); }
+.np-page { width: 100%; max-width: none; margin: 0; padding: 28px 0 64px; color: var(--color-text); }
 .np-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; padding: 18px 0 34px; border-bottom: 1px solid var(--color-border); }
 .np-eyebrow,.np-overline { display: flex; align-items: center; gap: 9px; color: var(--color-muted); font: 600 11px/1.4 var(--font-mono); letter-spacing: .09em; text-transform: uppercase; }
 .np-signal,.np-network > span { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); box-shadow: 0 0 0 4px rgba(255,140,0,.12); }

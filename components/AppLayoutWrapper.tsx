@@ -4,7 +4,6 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
-import { PrivacyGridCanvas } from "./PrivacyGridCanvas";
 
 export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -41,7 +40,6 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
       >
         Skip to main content
       </a>
-      <PrivacyGridCanvas />
       <Navbar />
       <main
         id="main-content"
