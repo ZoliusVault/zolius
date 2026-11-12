@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Header } from "./Header";
 import { DecodeText } from "./DecodeText";
+import { HeroContractAddress } from "./HeroContractAddress";
 
 export const HeroSection: React.FC = () => {
   return (
@@ -134,6 +135,9 @@ export const HeroSection: React.FC = () => {
           >
             SOL · USDC · SPL / Token-2022. Viewing keys encrypted with X-Wing.
           </div>
+
+          {/* Official Token Contract Address (Full, Uncut, 1-Click Copy & Quick Links) */}
+          <HeroContractAddress />
 
           <div
             style={{
