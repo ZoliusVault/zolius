@@ -22,6 +22,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
       },
     ],
-    sitemap: "https://www.veilpools.tech/sitemap.xml",
+    sitemap: "https://www.zoliusvault.tech/sitemap.xml",
   };
 }

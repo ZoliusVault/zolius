@@ -215,7 +215,7 @@ export const WaitlistForm: React.FC = () => {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="operator@veilpools.tech"
+              placeholder="operator@zoliusvault.tech"
               style={inputStyle}
             />
           </div>

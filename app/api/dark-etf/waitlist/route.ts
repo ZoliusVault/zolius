@@ -8,7 +8,7 @@ import {
 } from "@/lib/dark-etf-waitlist";
 
 const SUCCESS_MESSAGE = "You're on the list.";
-const SITE_ORIGIN = "https://www.veilpools.tech";
+const SITE_ORIGIN = "https://www.zoliusvault.tech";
 
 // In-memory per-IP bucket (hash only, never persisted): 5 submits / minute.
 const buckets = new Map<string, number[]>();
@@ -64,7 +64,7 @@ async function sendConfirmEmail(to: string, token: string): Promise<void> {
       `You're one click from the Dark ETF waitlist.\n\n` +
       `Confirm here (single use):\n${url}\n\n` +
       `If you didn't ask for this, ignore this email.\n` +
-      `Zolius Protocol — https://www.veilpools.tech`,
+      `Zolius Protocol — https://www.zoliusvault.tech`,
   });
 }
 

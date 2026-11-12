@@ -3,8 +3,8 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "veilpools.tech" }],
-      "destination": "https://www.veilpools.tech/$1",
+      "has": [{ "type": "host", "value": "zoliusvault.tech" }],
+      "destination": "https://www.zoliusvault.tech/$1",
       "permanent": true
     }
   ],
