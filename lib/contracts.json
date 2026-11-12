@@ -17,6 +17,30 @@
       "authority": "Not published",
       "explorer": "https://explorer.solana.com/address/ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW",
       "docs": "https://www.helius.dev/docs/privacy"
+    },
+    {
+      "id": "zolius-lock",
+      "name": "Zolius Lock",
+      "kind": "Application program",
+      "operator": "Zolius Vault",
+      "address": "HQivDD6KFxHNbbk5m3pjwzxnQ2qLuSVo9ARtu39eumwX",
+      "cluster": "mainnet-beta",
+      "buildStatus": "Production verifier configured; pending funded Mainnet deployment",
+      "authority": "35v7k3E9BTQKK5xzAmqdwN8jMrtM4inzCmRYV78ZWTt6",
+      "explorer": "https://explorer.solana.com/address/HQivDD6KFxHNbbk5m3pjwzxnQ2qLuSVo9ARtu39eumwX",
+      "docs": "/contracts"
+    },
+    {
+      "id": "zolius-swap",
+      "name": "Zolius Swap",
+      "kind": "Application program",
+      "operator": "Zolius Vault",
+      "address": "FnvxfnARsXAEVFCtppdfGUrTWxsLFWTQF16S6h1ysopS",
+      "cluster": "mainnet-beta",
+      "buildStatus": "Production verifier configured; pending funded Mainnet deployment",
+      "authority": "35v7k3E9BTQKK5xzAmqdwN8jMrtM4inzCmRYV78ZWTt6",
+      "explorer": "https://explorer.solana.com/address/FnvxfnARsXAEVFCtppdfGUrTWxsLFWTQF16S6h1ysopS",
+      "docs": "/contracts"
     }
   ],
   "token": {

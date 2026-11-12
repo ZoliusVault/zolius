@@ -1,0 +1,9 @@
+5cd2e73dbbcabad701c9587e8db8c55503049002b005b65ea29000637f924cef  target/zk/zolius-swap-circuits/cancel_order/pk.bin
+a8a8de9d017333dabb872f3265426e3f5f5f78c5948ffc07b49707ad873c3598  target/zk/zolius-swap-circuits/cancel_order/vk.bin
+5a128fb3bafaaf4f75de763eb56c46473b9ebe0c3d8e872a7a3659cfce78d7ee  target/zk/zolius-swap-circuits/cancel_order/metadata.json
+6e354f9741d38e0aec1bf6cb5394a2c48383c2568b512398b1efdfec09a2824b  target/zk/zolius-swap-circuits/make_order/pk.bin
+d61a9cec78df929e76579a0045c92f0ef13d1376a6bbb8a0d3365b6a84f75b22  target/zk/zolius-swap-circuits/make_order/vk.bin
+dd5651111a56ce3284066e30fbc85e7283dae5ead7ab6aec4eb17d1c8bbe2fdd  target/zk/zolius-swap-circuits/make_order/metadata.json
+5199d425d68b430f111da0dc96ea9bf00217037cbb0b3560087ba4fffbf5266e  target/zk/zolius-swap-circuits/take_order/pk.bin
+e8f60cf3aa87267fda4e23adf1f8cdba7954ae80c91a55ecbe74e5f53cb80023  target/zk/zolius-swap-circuits/take_order/vk.bin
+c2663b46666ba00f775047cbdff344cda3e0cc60e5cdab83ec61f7385551bae0  target/zk/zolius-swap-circuits/take_order/metadata.json

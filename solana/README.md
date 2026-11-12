@@ -1,6 +1,6 @@
 # Zolius Solana programs
 
-This directory contains experimental Devnet programs and clients, not a production-ready release.
+Lock and Swap are prepared for Solana Mainnet but are not deployed yet. Production verifier keys are checked into the program source; corresponding proving and verifying artifacts are shipped to the browser. The feature flag remains off until both programs are deployed and verified.
 
 - `lock-circuits`: proposed create, beneficiary claim and optional creator cancellation circuits.
 - `lock-program`: proposed on-chain verifier, time checks and Privacy Rings CPI.
@@ -12,10 +12,10 @@ This directory contains experimental Devnet programs and clients, not a producti
 - `policy`: host-only boundary tests; these checks do not replace the proof or program.
 - `RESEARCH.md`: SDK revision and protocol notes.
 
-The Lock and Swap IDs in source were observed as executable Devnet programs through the configured RPC on 2026-11-11. That account check does not prove the deployed binaries match this checkout. Do not treat these Devnet programs as Mainnet deployments.
+The current IDs in source are fresh Mainnet program IDs derived from local program keypairs. They have not been deployed. The old IDs in the Devnet changelog are historical and are not used by the Mainnet app.
 
-Both SBF programs build with the development test verifiers. All six application proofs have passed generated-verifier checks. Lock deposit/create/CPI/claim and Swap deposit/make/index/recover/take/CPI have passed isolated localnet flows against Helius Privacy Rings. Test setup keys generated with `zolana zk compile --test` are publicly reproducible and cannot protect real funds.
+Both SBF programs build with production verifier keys generated from the pinned circuit sources. The six verifier keys pass `zolana vks check` against their manifests and program binaries, and circuit tests pass. The key ceremony uses the PSE Perpetual Powers of Tau phase-one transcript and a single local phase-two contribution; the phase-two seed is not retained by the generator. This is not a multi-party phase-two ceremony.
 
-The web app connects Privacy Rings deposit, private transfer, withdrawal, balances and history, and generates Lock create/beneficiary-claim plus fixed-price OTC make/take proofs in the browser. Quantum Vault provides encrypted local backup files, expiring history shares, and encrypted transaction notes. Browser circuit proving keys are shipped as static assets and use the development test verifier setup, so these Lock/Swap flows are Devnet experiments only. Browser cancellation of creator locks and maker orders is not exposed; use the Rust client preparation flows only for local development.
+The web app connects Privacy Rings deposit, private transfer, withdrawal, balances and history, and generates Lock create/beneficiary-claim plus fixed-price OTC make/take proofs in the browser. Quantum Vault provides encrypted local backup files, expiring history shares, and encrypted transaction notes. Browser cancellation of creator locks and maker orders is not exposed. Enable `NEXT_PUBLIC_SOLANA_ZOLIUS_PROGRAMS_ENABLED` only after both Mainnet programs are deployed and checked executable.
 
 Lock and Swap outputs are encrypted for their recipients. The Lock creator and Swap maker must preserve the prepared output opening and confirmed tree location securely to recover their optional cancellation inputs after restart; app-level encrypted backup/recovery is not implemented yet. Recipient recovery helpers require complete relevant transaction history, including spends.

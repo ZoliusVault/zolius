@@ -45,10 +45,6 @@ import { lockCreate, lockRelease, swapCancel, swapMake, swapTake } from "../sola
 
 const privacyServiceUrl = () => new URL("/api/solana/privacy/v1/spr", window.location.origin).toString();
 const proverServiceUrl = privacyServiceUrl;
-function assertZoliusProgramMainnetDisabled(program: "Lock" | "Swap") {
-  throw new Error(`Zolius ${program} is not available on Solana Mainnet yet.`);
-}
-
 type SprSession = {
   client: Awaited<ReturnType<typeof createSprClient>>;
   wallet: Wallet;
@@ -87,8 +83,8 @@ type ProgramTransactionLike = {
   publicHash: Uint8Array;
 };
 
-const LOCK_PROGRAM_ID = (process.env.NEXT_PUBLIC_SOLANA_LOCK_PROGRAM_ID || "AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP") as Address;
-const SWAP_PROGRAM_ID = (process.env.NEXT_PUBLIC_SOLANA_SWAP_PROGRAM_ID || "HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u") as Address;
+const LOCK_PROGRAM_ID = (process.env.NEXT_PUBLIC_SOLANA_LOCK_PROGRAM_ID || "HQivDD6KFxHNbbk5m3pjwzxnQ2qLuSVo9ARtu39eumwX") as Address;
+const SWAP_PROGRAM_ID = (process.env.NEXT_PUBLIC_SOLANA_SWAP_PROGRAM_ID || "FnvxfnARsXAEVFCtppdfGUrTWxsLFWTQF16S6h1ysopS") as Address;
 const dynamicImport = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<ZkProgramModule>;
 
 function serializeProofAssignment<T extends (...args: any[]) => ProgramTransactionLike>(builder: T): T {
@@ -497,7 +493,6 @@ export async function createPrivateLock(
   stored: StoredWallet,
   input: { mint: string; amount: string; beneficiary: string; unlockAt: number; cancelable?: boolean },
 ): Promise<{ signature: string; unlockAt: number }> {
-  assertZoliusProgramMainnetDisabled("Lock");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -547,7 +542,6 @@ export async function createPrivateSwapOrder(
   stored: StoredWallet,
   input: { offerMint: string; offerAmount: string; requestMint: string; requestAmount: string; taker: string; expiresAt: number },
 ): Promise<{ signature: string; expiresAt: number; id: string }> {
-  assertZoliusProgramMainnetDisabled("Swap");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -606,7 +600,6 @@ export async function claimPrivateLock(
   stored: StoredWallet,
   input: { creator: string; id: string },
 ): Promise<{ signature: string }> {
-  assertZoliusProgramMainnetDisabled("Lock");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -659,7 +652,6 @@ export async function takePrivateSwapOrder(
   stored: StoredWallet,
   input: { maker: string; id: string },
 ): Promise<{ signature: string }> {
-  assertZoliusProgramMainnetDisabled("Swap");
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -729,7 +721,6 @@ export async function cancelPrivateSwapOrder(
   stored: StoredWallet,
   input: { id: string },
 ): Promise<{ signature: string }> {
-  assertZoliusProgramMainnetDisabled("Swap");
   const session = await openSession(stored);
   try {
     await syncSession(session);

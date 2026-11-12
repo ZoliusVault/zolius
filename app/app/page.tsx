@@ -62,7 +62,7 @@ export interface ZkNote {
 
 const STORAGE_NOTES_KEY = "zolius_vault_notes_mainnet_v1";
 const MAINNET_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const ZOLIUS_LOCK_SWAP_ENABLED = false;
+const ZOLIUS_LOCK_SWAP_ENABLED = process.env.NEXT_PUBLIC_SOLANA_ZOLIUS_PROGRAMS_ENABLED === "true";
 
 function WorkstationContent() {
   const searchParams = useSearchParams();

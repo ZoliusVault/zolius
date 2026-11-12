@@ -1,6 +1,5 @@
-//! In-progress Zolius Swap SPP program; not a deployable release.
-#[cfg(not(feature = "dev-test-keys"))]
-compile_error!("Only test verifier keys are being generated; enable dev-test-keys for development builds only.");
+//! Zolius Swap SPP program. Its verifier keys are generated from the pinned
+//! production setup and checked against `solana/swap-circuits/keys.sha256`.
 use pinocchio::{
     address::address_eq,
     cpi::{Seed, Signer},
@@ -15,7 +14,7 @@ use spr_program::{cpi::SppTransactAccounts, program::PdaOwner, verifier::address
 use zolius_swap_circuits::verifier::{cancel_order, make_order, take_order};
 use zolius_wire::{SwapCancel as CancelArgs, SwapMake as MakeArgs, SwapTake as TakeArgs};
 
-pinocchio::address::declare_id!("HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u");
+pinocchio::address::declare_id!("FnvxfnARsXAEVFCtppdfGUrTWxsLFWTQF16S6h1ysopS");
 const AUTHORITY_SEED: &[u8] = b"zolius_order";
 #[cfg(feature = "bpf-entrypoint")]
 pinocchio::entrypoint!(process_instruction);

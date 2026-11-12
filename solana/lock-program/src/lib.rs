@@ -1,7 +1,5 @@
-//! Zolius Lock's in-progress SPP program. Do not deploy until its generated
-//! verifier, program ID, client builders, and end-to-end tests are finalized.
-#[cfg(not(feature = "dev-test-keys"))]
-compile_error!("Only test verifier keys are being generated; enable dev-test-keys for development builds only.");
+//! Zolius Lock SPP program. Its verifier keys are generated from the pinned
+//! production setup and checked against `solana/lock-circuits/keys.sha256`.
 use pinocchio::{
     address::address_eq,
     cpi::{Seed, Signer},
@@ -16,7 +14,7 @@ use spr_program::{cpi::SppTransactAccounts, program::PdaOwner, verifier::address
 use zolius_lock_circuits::verifier::{cancel_lock, claim_lock, create_lock};
 use zolius_wire::{LockCreate as CreateArgs, LockRelease as ReleaseArgs};
 
-pinocchio::address::declare_id!("AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP");
+pinocchio::address::declare_id!("HQivDD6KFxHNbbk5m3pjwzxnQ2qLuSVo9ARtu39eumwX");
 const AUTHORITY_SEED: &[u8] = b"zolius_lock";
 
 #[cfg(feature = "bpf-entrypoint")]
