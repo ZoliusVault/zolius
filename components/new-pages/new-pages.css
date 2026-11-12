@@ -1,12 +1,10 @@
 .np-page { width: 100%; max-width: none; margin: 0; padding: 28px 0 64px; color: var(--color-text); }
 .np-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; padding: 18px 0 34px; border-bottom: 1px solid var(--color-border); }
 .np-eyebrow,.np-overline { display: flex; align-items: center; gap: 9px; color: var(--color-muted); font: 600 11px/1.4 var(--font-mono); letter-spacing: .09em; text-transform: uppercase; }
-.np-signal,.np-network > span { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); box-shadow: 0 0 0 4px rgba(255,140,0,.12); }
 .np-title { margin: 15px 0 12px; font: 400 clamp(38px,5.6vw,62px)/1.02 var(--font-headline); letter-spacing: -.035em; }
 .np-lede { max-width: 720px; margin: 0; color: var(--color-muted); font: 14px/1.8 var(--font-mono); }
 .np-hero-aside { flex: 0 0 auto; display: grid; justify-items: end; gap: 10px; }
-.np-network { display: inline-flex; align-items: center; gap: 9px; padding: 8px 11px; color: #b45309; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; font: 700 10px var(--font-mono); letter-spacing: .08em; white-space: nowrap; }
-.np-network > span { width: 6px; height: 6px; box-shadow: none; }
+.np-network { display: inline-flex; align-items: center; padding: 8px 11px; color: #b45309; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; font: 700 10px var(--font-mono); letter-spacing: .08em; white-space: nowrap; }
 .np-network--small { padding: 5px 8px; font-size: 9px; }
 .np-grid { display: grid; gap: 18px; }
 .np-grid--2 { grid-template-columns: repeat(2,minmax(0,1fr)); }

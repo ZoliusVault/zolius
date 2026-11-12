@@ -15,7 +15,7 @@ export function PageHero({
   return (
     <div className="np-hero">
       <div>
-        <div className="np-eyebrow"><span className="np-signal" />{eyebrow}</div>
+        <div className="np-eyebrow">{eyebrow}</div>
         <h1 className="np-title">{title}</h1>
         <p className="np-lede">{children}</p>
       </div>
@@ -25,7 +25,7 @@ export function PageHero({
 }
 
 export function DevnetBadge({ small = false }: { small?: boolean }) {
-  return <span className={`np-network${small ? " np-network--small" : ""}`}><span />SOLANA DEVNET</span>;
+  return <span className={`np-network${small ? " np-network--small" : ""}`}>SOLANA DEVNET</span>;
 }
 
 export function Panel({
