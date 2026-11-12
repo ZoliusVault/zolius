@@ -7,7 +7,6 @@ import "./styles/global.css";
 
 import { Header } from "./components/Header";
 import { HeroSection } from "./components/HeroSection";
-import { ExplorePagesSection } from "./components/ExplorePagesSection";
 import { ProblemSection } from "./components/ProblemSection";
 import { DiagnosticSection } from "./components/DiagnosticSection";
 import { WhoItIsForSection } from "./components/WhoItIsForSection";
@@ -49,7 +48,6 @@ export const App: React.FC = () => {
       {/* Landing Page Content Hierarchy (Layer 1, always in front) */}
       <main style={{ position: "relative", zIndex: 1 }}>
         <HeroSection />
-        <ExplorePagesSection />
         <ProblemSection />
         <DiagnosticSection />
         <WhoItIsForSection />

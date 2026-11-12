@@ -33,17 +33,6 @@ export const Header: React.FC = () => {
         }}
       >
         <a
-          href="#explore"
-          className="lp-link landing-header-explore"
-          style={{
-            color: "var(--color-muted)",
-            textDecoration: "none",
-            transition: "opacity var(--duration-fast)",
-          }}
-        >
-          Explore
-        </a>
-        <a
           href="#how"
           className="lp-link hidden lg:inline-block"
           style={{
