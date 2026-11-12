@@ -105,7 +105,7 @@ export const HeroSection: React.FC = () => {
         <div
           className="hero-enter"
           style={{
-            maxWidth: "min(100%, 34rem)",
+            maxWidth: "min(100%, 46rem)",
             animationDelay: "160ms",
           }}
         >
@@ -117,7 +117,7 @@ export const HeroSection: React.FC = () => {
               fontSize: "var(--text-intro)",
               lineHeight: "var(--leading-intro)",
               color: "var(--color-text)",
-              maxWidth: "100%",
+              maxWidth: "34rem",
               overflowWrap: "break-word",
             }}
           >
@@ -131,6 +131,7 @@ export const HeroSection: React.FC = () => {
               fontSize: "var(--text-caption)",
               color: "var(--color-muted)",
               letterSpacing: "0.04em",
+              maxWidth: "34rem",
             }}
           >
             SOL · USDC · SPL / Token-2022. Viewing keys encrypted with X-Wing.

@@ -35,11 +35,11 @@ export const HeroContractAddress: React.FC = () => {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "7px",
-        marginTop: "var(--space-3, 0.75rem)",
+        gap: "9px",
+        marginTop: "var(--space-4, 1rem)",
         cursor: "pointer",
         fontFamily: "var(--font-mono, monospace)",
-        fontSize: "clamp(11.5px, 1.35vw, 13.5px)",
+        fontSize: "clamp(14px, 1.8vw, 17px)",
         lineHeight: 1.4,
         color: "var(--color-text, #111111)",
         userSelect: "all",
@@ -52,7 +52,7 @@ export const HeroContractAddress: React.FC = () => {
         style={{
           color: "var(--color-muted, #666666)",
           fontWeight: 700,
-          letterSpacing: "0.03em",
+          letterSpacing: "0.04em",
           flexShrink: 0,
         }}
       >
@@ -62,7 +62,7 @@ export const HeroContractAddress: React.FC = () => {
       <span
         style={{
           fontWeight: 700,
-          letterSpacing: "0.02em",
+          letterSpacing: "0.025em",
           flexShrink: 0,
         }}
       >
@@ -74,7 +74,7 @@ export const HeroContractAddress: React.FC = () => {
           display: "inline-flex",
           alignItems: "center",
           gap: "4px",
-          fontSize: "12px",
+          fontSize: "13px",
           color: copied ? "#10B981" : "var(--color-muted, #666666)",
           fontWeight: 700,
           transition: "color 0.15s ease",
