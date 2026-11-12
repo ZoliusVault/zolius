@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://www.veilpools.tech";
+  const baseUrl = "https://www.zoliusvault.tech";
   const now = new Date();
 
   return [
@@ -23,6 +23,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    ...["exposed", "proof", "pay", "otc", "agents"].map((path) => ({
+      url: `${baseUrl}/${path}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: path === "pay" || path === "otc" ? 0.8 : 0.7,
+    })),
     {
       url: `${baseUrl}/burn`,
       lastModified: now,

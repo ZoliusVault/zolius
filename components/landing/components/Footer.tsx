@@ -4,8 +4,10 @@ import React from "react";
 import Link from "next/link";
 import { ZoliusLogo } from "../../VeilLogo";
 import { XLogo } from "../../TokenLogos";
+import contracts from "@/lib/contracts.json";
 
 export const Footer: React.FC = () => {
+  const privacyProgram = contracts.programs.find((program) => program.id === "privacy-ring");
   return (
     <footer id="footer" className="landing-footer" aria-label="Site footer">
       <div className="landing-footer__inner">
@@ -14,7 +16,7 @@ export const Footer: React.FC = () => {
           <div className="landing-footer__brand">
             <ZoliusLogo href="/" size="lg" color="#ffffff" />
             <p style={{ marginTop: "14px", fontSize: "13px", lineHeight: "1.7", color: "#aba3ae" }}>
-              Independent self-custodial confidential vault built on Solana Privacy Rings. ML-KEM-768 quantum-ready viewing key encryption.
+              Independent self-custodial confidential vault built on Solana Privacy Rings. Building toward quantum-resilient viewing-key protection with hybrid ML-KEM-768 X-Wing encryption.
             </p>
             <div
               style={{
@@ -29,7 +31,7 @@ export const Footer: React.FC = () => {
                 maxWidth: "340px",
               }}
             >
-              Zolius Vault is an independent project built on the open Solana Privacy Rings protocol. Not affiliated with or endorsed by Helius.
+              Independent project built on Solana Privacy Rings. Not affiliated with Helius.
             </div>
             <a
               className="landing-footer__email"
@@ -51,6 +53,9 @@ export const Footer: React.FC = () => {
               <li><Link href="/app?tab=swap">Zolius Swap</Link></li>
               <li><Link href="/app?tab=lock">Timelock Escrow</Link></li>
               <li><Link href="/app?tab=vault">Vault Notes Manager</Link></li>
+              <li><Link href="/pay">Zolius Pay</Link></li>
+              <li><Link href="/otc">Private OTC</Link></li>
+              <li><Link href="/agents">Private Agent Payments</Link></li>
               <li><Link href="/quantum">Quantum Vault</Link></li>
             </ul>
           </nav>
@@ -60,6 +65,8 @@ export const Footer: React.FC = () => {
             <h2>Architecture</h2>
             <ul>
               <li><Link href="/contracts">Solana Program IDs</Link></li>
+              <li><Link href="/exposed">Wallet Exposure Checker</Link></li>
+              <li><Link href="/proof">Glass vs Vault</Link></li>
               <li><a href="https://www.helius.dev/docs/privacy" target="_blank" rel="noopener noreferrer">Solana Privacy Rings</a></li>
               <li><Link href="/quantum">ML-KEM-768 Specs</Link></li>
               <li><Link href="/contracts">Verifiable Builds</Link></li>
@@ -74,7 +81,7 @@ export const Footer: React.FC = () => {
               <li><a href="https://www.certora.com" target="_blank" rel="noopener noreferrer">Certora Formal Verification</a></li>
               <li><a href="https://osec.io" target="_blank" rel="noopener noreferrer">OtterSec Security Audit</a></li>
               <li><a href="https://www.zksecurity.xyz" target="_blank" rel="noopener noreferrer">zkSecurity Circuit Audit</a></li>
-              <li><a href="https://solscan.io/account/ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW" target="_blank" rel="noopener noreferrer">Solscan Canonical Program</a></li>
+              <li><a href={privacyProgram?.explorer || "https://www.helius.dev/docs/privacy"} target="_blank" rel="noopener noreferrer">Solana Privacy Program</a></li>
             </ul>
           </nav>
 
@@ -108,7 +115,7 @@ export const Footer: React.FC = () => {
               rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              <span>Solana Mainnet</span>
+              <span>Solana Devnet</span>
               <svg
                 aria-hidden="true"
                 width="14"

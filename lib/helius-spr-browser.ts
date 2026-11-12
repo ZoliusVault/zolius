@@ -535,7 +535,7 @@ export async function createPrivateLock(
 export async function createPrivateSwapOrder(
   stored: StoredWallet,
   input: { offerMint: string; offerAmount: string; requestMint: string; requestAmount: string; taker: string; expiresAt: number },
-): Promise<{ signature: string; expiresAt: number }> {
+): Promise<{ signature: string; expiresAt: number; id: string }> {
   const session = await openSession(stored);
   try {
     await syncSession(session);
@@ -582,7 +582,9 @@ export async function createPrivateSwapOrder(
       viewingPubkey: recipient.address.viewingPublicKey.toBytes(),
       ownerSigners: true,
     });
-    return { signature, expiresAt: input.expiresAt };
+    const orderHash = prepared.transaction.outputHashes[0];
+    if (!orderHash) throw new Error("The private order commitment is missing from the prepared transaction.");
+    return { signature, expiresAt: input.expiresAt, id: toHex(orderHash) };
   } finally {
     destroySession(session);
   }

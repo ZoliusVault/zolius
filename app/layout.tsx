@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s | Zolius Vault",
   },
   description:
-    "Confidential finance on Solana, with quantum-resilient viewing-key protection and self-custody by design.",
+    "Confidential finance on Solana. Building toward quantum-resilient viewing-key protection with a hybrid X-Wing Quantum Vault.",
   keywords: [
     "Zolius Vault",
     "Solana",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Zolius Vault — Private Finance on Solana",
     description:
-      "Confidential finance on Solana, with quantum-resilient viewing-key protection and self-custody by design.",
+      "Confidential finance on Solana. Building toward quantum-resilient viewing-key protection with a hybrid X-Wing Quantum Vault.",
     url: "https://www.zoliusvault.tech",
     siteName: "Zolius Vault",
     images: [
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     creator: "@ZoliusVault",
     title: "Zolius Vault — Self-Custodial Confidential Transfers on Solana",
     description:
-      "Confidential finance on Solana, with quantum-resilient viewing-key protection and self-custody by design.",
+      "Confidential finance on Solana. Building toward quantum-resilient viewing-key protection with a hybrid X-Wing Quantum Vault.",
     images: ["/og-banner.png"],
   },
   icons: {

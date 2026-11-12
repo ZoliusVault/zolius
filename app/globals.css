@@ -1,5 +1,6 @@
 @import "../components/landing/styles/tokens.css";
 @import "../components/landing/styles/animations.css";
+@import "../components/new-pages/new-pages.css";
 @import "tailwindcss";
 
 @layer base {

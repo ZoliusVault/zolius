@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, LogOut, Copy, Check, ChevronDown, Menu, X as CloseIcon, Shield, FileText, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, Cpu, LogOut, Copy, Check, ChevronDown, Menu, Search, ShieldCheck, WalletCards, X as CloseIcon, Shield, FileText, ExternalLink } from "lucide-react";
 import { WalletModal } from "./WalletModal";
 import { ZoliusLogo } from "./VeilLogo";
 import { SolanaLogo, XLogo } from "./TokenLogos";
@@ -366,7 +366,7 @@ export function Navbar() {
               type="button"
               onClick={() => setIsNavDrawerOpen(true)}
               aria-label="Open Navigation Menu"
-              className="inline-flex md:hidden lp-btn lp-btn--outline"
+              className="inline-flex lp-btn lp-btn--outline"
               style={{
                 alignItems: "center",
                 justifyContent: "center",
@@ -465,6 +465,12 @@ export function Navbar() {
               <nav style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "18px" }}>
                 {[
                   { href: "/app", label: "Zolius Vault Terminal", icon: Shield, active: pathname === "/app" },
+                  { href: "/exposed", label: "Wallet Exposure", icon: Search, active: pathname === "/exposed" },
+                  { href: "/proof", label: "Glass vs Vault", icon: ShieldCheck, active: pathname === "/proof" },
+                  { href: "/pay", label: "Zolius Pay", icon: WalletCards, active: pathname.startsWith("/pay") },
+                  { href: "/otc", label: "Private OTC", icon: ArrowLeftRight, active: pathname === "/otc" },
+                  { href: "/agents", label: "Private Agents", icon: Cpu, active: pathname === "/agents", badge: "Research" },
+                  { href: "/contracts", label: "Contracts Registry", icon: FileText, active: pathname === "/contracts" },
                   { href: "/privacy", label: "Privacy Policy", icon: FileText, active: pathname === "/privacy" },
                   { href: "/terms", label: "Terms of Service", icon: FileText, active: pathname === "/terms" },
                 ].map((item) => {

@@ -7,6 +7,7 @@ const WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 90;
 const ALLOWED_METHODS = new Set([
   "getAccountInfo",
+  "getAssetsByOwner",
   "getBalance",
   "getBlockHeight",
   "getEpochInfo",
@@ -17,9 +18,11 @@ const ALLOWED_METHODS = new Set([
   "getProgramAccounts",
   "getRecentPrioritizationFees",
   "getSignatureStatuses",
+  "getSignaturesForAddress",
   "getSlot",
   "getTokenAccountBalance",
   "getTokenAccountsByOwner",
+  "getTransaction",
   "isBlockhashValid",
   "sendTransaction",
   "simulateTransaction",

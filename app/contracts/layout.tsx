@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Verified Contracts Registry | Zolius Protocol",
     description:
       "Live executable account checks for Helius Privacy Rings and Zolius programs on Solana Devnet.",
-    images: ["/og-banner.png"],
+    images: ["/contracts/opengraph-image"],
   },
 };
 
