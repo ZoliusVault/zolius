@@ -20,14 +20,14 @@ import {
 } from "@heliuslabs/spr";
 import { isWalletRegistered } from "@heliuslabs/spr/wallet";
 import { resolveRegisteredAddress } from "@heliuslabs/spr/wallet";
-import { ed25519DerivationMessage } from "@heliuslabs/spr/keypair";
+import { ed25519DerivationMessage, poseidon } from "@heliuslabs/spr/keypair";
 import { ViewingKey, solanaOwnerIdentity } from "@heliuslabs/spr/keypair";
-import { Mint } from "@heliuslabs/spr/transaction";
+import { createExternalData, Mint, SppProofInputs } from "@heliuslabs/spr/transaction";
 import { EncryptedScheme, TransactionError, decodeConfidential, decodeOutputData } from "@heliuslabs/spr/transaction";
 import { bindProgramTransaction, ProgramOwner, toProgramWalletUtxo, transactCpiAccounts } from "@heliuslabs/spr/program";
 import { encodeTransactInstructionData } from "@heliuslabs/spr/interface";
 import { treeAddress } from "@heliuslabs/spr/internal";
-import { SignedTeePolicy } from "@heliuslabs/spr/client";
+import { NullifierKeyProofAuthority, SignedTeePolicy } from "@heliuslabs/spr/client";
 import {
   AccountRole,
   address,
@@ -37,6 +37,7 @@ import {
   getBase64EncodedWireTransaction,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
+  setTransactionMessageConfig,
 } from "@solana/kit";
 import { PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { detectSolana, type SolanaWalletId, type StoredWallet } from "@/lib/wallets";
@@ -77,6 +78,8 @@ type ProgramTransactionLike = {
   transaction: {
     inputs: readonly { treeId: number }[];
     outputTreeId: number;
+    outputHashes: readonly Uint8Array[];
+    resolvedOwnerTags: readonly Bytes32[];
     encryptWithKeys(keys: ViewingKey): Parameters<Awaited<ReturnType<typeof createSprClient>>["proveTransact"]>[0];
   };
   proofInputs: Uint8Array;
@@ -86,6 +89,16 @@ type ProgramTransactionLike = {
 const LOCK_PROGRAM_ID = (process.env.NEXT_PUBLIC_SOLANA_LOCK_PROGRAM_ID || "AJok8ztWjxcbeFDLAWRmY11fCvp8mJJpbrvpUs3UmoZP") as Address;
 const SWAP_PROGRAM_ID = (process.env.NEXT_PUBLIC_SOLANA_SWAP_PROGRAM_ID || "HQioSDqtsHSz2LzdHZXYShA8Jgi19Sxxh92M2rKVMC7u") as Address;
 const dynamicImport = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<ZkProgramModule>;
+
+function serializeProofAssignment<T extends (...args: any[]) => ProgramTransactionLike>(builder: T): T {
+  return ((...args: Parameters<T>) => {
+    const transaction = builder(...args);
+    return {
+      ...transaction,
+      proofInputs: new TextEncoder().encode(JSON.stringify(transaction.proofInputs)),
+    };
+  }) as T;
+}
 
 export type SyncedSolNote = {
   id: string;
@@ -135,6 +148,21 @@ function formatTokenAmount(value: bigint, decimals: number): string {
   const scale = 10n ** BigInt(places);
   const fraction = (value % scale).toString().padStart(places, "0").replace(/0+$/, "");
   return fraction ? `${value / scale}.${fraction}` : (value / scale).toString();
+}
+
+function requestedProgramMint(value: unknown, session: SprSession): Address {
+  if (typeof value === "string") return new PublicKey(value).toBase58() as Address;
+  if (value instanceof Uint8Array || Array.isArray(value)) {
+    const bytes = value instanceof Uint8Array ? value : Uint8Array.from(value as number[]);
+    if (bytes.length !== 32) throw new Error("The private OTC order has an invalid requested-asset field.");
+    if (bytes.every((byte) => byte === 0)) return SOL_MINT;
+    const mint = session.wallet.registry.addressForField(bytes as Bytes32);
+    if (mint) return mint;
+  }
+  if (typeof value === "object" && value !== null && "asset" in value && typeof value.asset === "string") {
+    return new PublicKey(value.asset).toBase58() as Address;
+  }
+  throw new Error("The private OTC order requests an asset that is not registered in this wallet.");
 }
 
 async function portfolioForSession(session: SprSession): Promise<PrivatePortfolio> {
@@ -435,7 +463,7 @@ export async function readPrivateSwapOrders(stored: StoredWallet, maker: string)
     const outputs = await recoverProgramOutputs(session, maker, "swap");
     const metadata = new AssetMetadataCache(session.client);
     return await Promise.all(outputs.map(async (output) => {
-      const requestedMint = String(output.data.requestedMint.asset);
+      const requestedMint = requestedProgramMint(output.data.requestedMint, session);
       const [offerDetails, requestDetails] = await Promise.all([
         metadata.get(output.mint as Address),
         metadata.get(requestedMint as Address),
@@ -472,7 +500,7 @@ export async function createPrivateLock(
     if (!module.createLockTransaction) throw new Error("Lock transaction builder is missing from the generated WASM module.");
     const authority = await ProgramOwner.find(["zolius_lock", new PublicKey(session.address).toBytes()], LOCK_PROGRAM_ID);
     const identity = signerIdentity(session.address);
-    const build = bindProgramTransaction(module.createLockTransaction, { assets: session.wallet.registry });
+    const build = bindProgramTransaction(serializeProofAssignment(module.createLockTransaction), { assets: session.wallet.registry });
     const prepared = await build({
       private: {
         txContext: { outputTreeId: session.client.treeId },
@@ -526,7 +554,7 @@ export async function createPrivateSwapOrder(
     if (!module.makeOrderTransaction) throw new Error("Swap transaction builder is missing from the generated WASM module.");
     const authority = await ProgramOwner.find(["zolius_order", new PublicKey(session.address).toBytes()], SWAP_PROGRAM_ID);
     const identity = signerIdentity(session.address);
-    const build = bindProgramTransaction(module.makeOrderTransaction, { assets: session.wallet.registry });
+    const build = bindProgramTransaction(serializeProofAssignment(module.makeOrderTransaction), { assets: session.wallet.registry });
     const prepared = await build({
       private: {
         txContext: { outputTreeId: session.client.treeId },
@@ -550,6 +578,7 @@ export async function createPrivateSwapOrder(
       action: "swap-make",
       prepared,
       proof,
+      expiresAt: BigInt(input.expiresAt),
       viewingPubkey: recipient.address.viewingPublicKey.toBytes(),
       ownerSigners: true,
     });
@@ -575,12 +604,11 @@ export async function claimPrivateLock(
     }
     const module = await loadProgramWasm("lock");
     if (!module.claimLockTransaction) throw new Error("Lock claim builder is missing from the generated WASM module.");
-    const signingKey = session.wallet.identity.signingPublicKey.toBytes();
     const beneficiary = {
-      key: { tag: signingKey[0], bytes: signingKey.slice(1, 33) },
+      key: { tag: "S".charCodeAt(0), bytes: new PublicKey(session.address).toBytes() },
       nullifierPk: BigInt(`0x${toHex(session.wallet.identity.nullifierPublicKey)}`).toString(),
     };
-    const build = bindProgramTransaction(module.claimLockTransaction, { assets: session.wallet.registry });
+    const build = bindProgramTransaction(serializeProofAssignment(module.claimLockTransaction), { assets: session.wallet.registry });
     const prepared = await build({
       private: {
         txContext: { outputTreeId: lock.utxo.treeId },
@@ -626,7 +654,7 @@ export async function takePrivateSwapOrder(
     if (!Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000)) {
       throw new Error("This OTC order has expired.");
     }
-    const requestMint = String(order.data.requestedMint.asset) as Address;
+    const requestMint = requestedProgramMint(order.data.requestedMint, session);
     const requestAmount = BigInt(order.data.requestedAmount);
     const payment = spendableProgramInput(session, requestMint, requestAmount, true);
     if (payment.treeId !== order.utxo.treeId) {
@@ -638,10 +666,13 @@ export async function takePrivateSwapOrder(
     const module = await loadProgramWasm("swap");
     if (!module.takeOrderTransaction) throw new Error("Swap take builder is missing from the generated WASM module.");
     const requestedMint = Mint.fromRegistry(session.wallet.registry, requestMint);
-    const build = bindProgramTransaction(module.takeOrderTransaction, { assets: session.wallet.registry });
+    const build = bindProgramTransaction(serializeProofAssignment(module.takeOrderTransaction), { assets: session.wallet.registry });
     const prepared = await build({
       private: {
-        txContext: { outputTreeId: order.utxo.treeId },
+        txContext: {
+          outputTreeId: order.utxo.treeId,
+          blindingSeed: poseidon([unsignedBigIntBytes(0x53575458n), order.utxo.utxo.blinding]),
+        },
         order: order.utxo,
         terms: {
           ...order.data,
@@ -667,6 +698,7 @@ export async function takePrivateSwapOrder(
       action: "swap-take",
       prepared,
       proof,
+      expiresAt: BigInt(expiresAt),
       viewingPubkey: maker.address.viewingPublicKey.toBytes(),
       ownerSigners: true,
       maker: new PublicKey(makerAddress).toBytes(),
@@ -720,6 +752,17 @@ function concatBytes(...parts: Uint8Array[]): Uint8Array {
   return bytes;
 }
 
+function unsignedBigIntBytes(value: bigint, length = 32): Uint8Array {
+  const bytes = new Uint8Array(length);
+  let remaining = value;
+  for (let index = length - 1; index >= 0; index -= 1) {
+    bytes[index] = Number(remaining & 0xffn);
+    remaining >>= 8n;
+  }
+  if (remaining !== 0n) throw new Error("Integer does not fit in the requested byte width.");
+  return bytes;
+}
+
 function readProgramArtifact(kind: ZkProgramKind, action: string, file: string): Promise<Uint8Array> {
   return fetch(`/zk/${kind}/${action}/${file}`, { cache: "force-cache" }).then(async (response) => {
     if (!response.ok) throw new Error(`Could not load ${kind} ${action} proof artifact (${response.status}).`);
@@ -751,7 +794,13 @@ async function proveProgramAction(
   const session = new module.ProvingSession(circuit, provingKey, sources);
   const verifier = new module.VerifyingKey(verifyingKey);
   try {
-    const bundle = session.prove(transaction.proofInputs, {});
+    let assignment: unknown;
+    try {
+      assignment = JSON.parse(new TextDecoder().decode(transaction.proofInputs));
+    } catch {
+      throw new Error(`${kind} WASM returned invalid proof assignment data.`);
+    }
+    const bundle = session.prove(assignment, {});
     try {
       if (!verifier.verify(bundle.proof, bundle.publicInputs)) {
         throw new Error(`${kind} proof failed local verification; no transaction was sent.`);
@@ -779,6 +828,7 @@ async function submitProgramTransaction(input: {
   ownerSigners: boolean;
   release?: { creator: Uint8Array; unlock: bigint };
   maker?: Uint8Array;
+  expiresAt?: bigint;
 }): Promise<string> {
   const { session, program, pdaSeed, action, pdaOwner, prepared, proof, viewingPubkey, ownerSigners, release, maker } = input;
   const actor = session.address as Address;
@@ -787,10 +837,84 @@ async function submitProgramTransaction(input: {
     [new TextEncoder().encode(pdaSeed), new PublicKey(pdaActor).toBytes()],
     new PublicKey(program),
   );
-  const transact = await session.client.proveTransact(
-    prepared.transaction.encryptWithKeys(session.viewingKey),
-    session.keys,
-  );
+  const encryptedInputs = prepared.transaction.encryptWithKeys(session.viewingKey);
+  const sppInputs = action === "lock-create" || action === "swap-make" || input.expiresAt !== undefined
+    ? (() => {
+        const addMarker = action === "lock-create" || action === "swap-make";
+        const markerOutputHash = addMarker ? prepared.transaction.outputHashes[1] : undefined;
+        const markerViewTag = addMarker ? prepared.transaction.resolvedOwnerTags[1] : undefined;
+        if (addMarker && (!markerOutputHash || !markerViewTag)) {
+          throw new Error("The private program output needed for its recipient marker is missing.");
+        }
+        const externalData = createExternalData({
+          expiryUnixTs: input.expiresAt ?? encryptedInputs.externalData.expiryUnixTs,
+          interfaceTransfers: encryptedInputs.externalData.interfaceTransfers,
+          ...(encryptedInputs.externalData.dataHash === undefined
+            ? {}
+            : { dataHash: encryptedInputs.externalData.dataHash }),
+          ...(encryptedInputs.externalData.ringDataHash === undefined
+            ? {}
+            : { ringDataHash: encryptedInputs.externalData.ringDataHash }),
+          txViewingPublicKey: encryptedInputs.externalData.txViewingPublicKey,
+          salt: encryptedInputs.externalData.salt,
+          outputs: encryptedInputs.externalData.outputs,
+          resolvedOwnerTags: encryptedInputs.externalData.resolvedOwnerTags,
+          messages: addMarker ? [{
+            viewTag: markerViewTag!,
+            data: concatBytes(markerOutputHash!, new PublicKey(actor).toBytes()),
+          }] : encryptedInputs.externalData.messages,
+        });
+        return new SppProofInputs({
+          payer: encryptedInputs.payer,
+          inputUtxos: encryptedInputs.inputUtxos,
+          outputs: encryptedInputs.outputs,
+          externalData,
+          blindingSeed: encryptedInputs.blindingSeed,
+          outputTreeId: encryptedInputs.outputTreeId,
+          cacheAccounts: encryptedInputs.cacheAccounts,
+        });
+      })()
+    : encryptedInputs;
+  let transact: Awaited<ReturnType<typeof session.client.proveTransact>>;
+  if (action === "lock-claim") {
+    const programNullifierKey = ProgramOwner.nullifierKey();
+    const authority = new NullifierKeyProofAuthority(programNullifierKey, session.client.proofService);
+    try {
+      transact = await session.client.proveTransact(sppInputs, authority);
+    } finally {
+      authority.destroy();
+      programNullifierKey.destroy();
+    }
+  } else if (action === "swap-take") {
+    const programNullifierKey = ProgramOwner.nullifierKey();
+    const programOwner = await ProgramOwner.find([pdaSeed, new PublicKey(pdaActor).toBytes()], program);
+    const ownerHash = BigInt(`0x${toHex(programOwner.publicKey().ownerProofInputHash())}`);
+    const secretBytes = programNullifierKey.secretBytes();
+    const ownerSecret = BigInt(`0x${toHex(secretBytes)}`);
+    secretBytes.fill(0);
+    programNullifierKey.destroy();
+    const completeProgramOwnerInput = <T extends { ownerPublicKeyHash: bigint; nullifierSecret?: bigint }>(value: T): T =>
+      value.ownerPublicKeyHash === ownerHash && value.nullifierSecret === undefined
+        ? { ...value, nullifierSecret: ownerSecret }
+        : value;
+    const authority: any = {
+      prove: (inputs: Parameters<typeof session.keys.prove>[0], context?: Parameters<typeof session.keys.prove>[1]) =>
+        session.keys.prove({
+          ...inputs,
+          payload: { ...inputs.payload, inputs: inputs.payload.inputs.map(completeProgramOwnerInput) },
+        } as any, context),
+      proveMerge: (inputs: Parameters<typeof session.keys.proveMerge>[0], context?: Parameters<typeof session.keys.proveMerge>[1]) =>
+        session.keys.proveMerge(inputs, context),
+      proveIndexed: (request: Parameters<typeof session.keys.proveIndexed>[0], context?: Parameters<typeof session.keys.proveIndexed>[1]) =>
+        session.keys.proveIndexed({
+          ...request,
+          payload: { ...request.payload, inputs: request.payload.inputs.map(completeProgramOwnerInput) },
+        } as any, context),
+    };
+    transact = await session.client.proveTransact(sppInputs, authority);
+  } else {
+    transact = await session.client.proveTransact(sppInputs, session.keys);
+  }
   const [inputTreeId] = prepared.transaction.inputs.map((utxo) => utxo.treeId);
   if (inputTreeId === undefined) throw new Error("The private transaction has no input tree.");
   const actorSigner = { address: actor } as Parameters<typeof transactCpiAccounts>[0]["payer"];
@@ -831,7 +955,10 @@ async function submitProgramTransaction(input: {
     [instruction],
     setTransactionMessageLifetimeUsingBlockhash(
       lifetime,
-      setTransactionMessageFeePayer(actor, createTransactionMessage({ version: 0 })),
+      setTransactionMessageConfig(
+        { computeUnitLimit: 1_400_000, loadedAccountsDataSizeLimit: 64 * 1024 * 1024 },
+        setTransactionMessageFeePayer(actor, createTransactionMessage({ version: 1 })),
+      ),
     ),
   );
   const tx = await sendWithWallet(session, compileTransaction(message) as Parameters<typeof getBase64EncodedWireTransaction>[0]);
