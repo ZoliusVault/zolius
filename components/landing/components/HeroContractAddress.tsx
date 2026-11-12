@@ -35,11 +35,12 @@ export const HeroContractAddress: React.FC = () => {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "8px",
-        marginTop: "var(--space-3, 0.75rem)",
+        gap: "10px",
+        marginTop: "var(--space-4, 1rem)",
         cursor: "pointer",
         fontFamily: "var(--font-mono, monospace)",
-        fontSize: "clamp(11px, 2.2vw, 13px)",
+        fontSize: "clamp(14px, 2vw, 17.5px)",
+        lineHeight: 1.4,
         color: "var(--color-text, #111111)",
         userSelect: "all",
         maxWidth: "100%",
@@ -47,31 +48,31 @@ export const HeroContractAddress: React.FC = () => {
         animationDelay: "180ms",
       }}
     >
-      <span style={{ color: "var(--color-muted, #777777)", fontWeight: 500 }}>CA:</span>
-      <span style={{ fontWeight: 600, wordBreak: "break-all", letterSpacing: "0.02em" }}>
+      <span style={{ color: "var(--color-muted, #666666)", fontWeight: 700, letterSpacing: "0.04em" }}>CA:</span>
+      <span style={{ fontWeight: 700, wordBreak: "break-all", letterSpacing: "0.025em" }}>
         {TOKEN_CONTRACT_ADDRESS}
       </span>
       <span
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: "4px",
-          fontSize: "11px",
-          color: copied ? "#10B981" : "var(--color-muted, #888888)",
-          fontWeight: 600,
+          gap: "5px",
+          fontSize: "13px",
+          color: copied ? "#10B981" : "var(--color-muted, #666666)",
+          fontWeight: 700,
           transition: "color 0.15s ease",
           flexShrink: 0,
         }}
       >
         {copied ? (
           <>
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <svg width="15" height="15" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.4">
               <path d="M2.5 7.5L5.5 10.5L11.5 3.5" />
             </svg>
             <span>Copied!</span>
           </>
         ) : (
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ opacity: 0.7 }}>
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ opacity: 0.85 }}>
             <rect x="4.5" y="4.5" width="7" height="7" rx="1.5" />
             <path d="M9.5 4.5V2.5C9.5 1.95 9.05 1.5 8.5 1.5H2.5C1.95 1.5 1.5 1.95 1.5 2.5V8.5C1.5 9.05 1.95 9.5 2.5 9.5H4.5" />
           </svg>
